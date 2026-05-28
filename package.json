@@ -10,9 +10,12 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.6",
     "expo-constants": "~56.0.16",
     "expo-dev-client": "~56.0.16",
@@ -37,6 +40,7 @@
     "eslint-config-expo": "^56.0.4",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.3",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.7"
   }
 }

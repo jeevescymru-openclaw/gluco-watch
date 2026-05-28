@@ -1,9 +1,7 @@
-import { View } from 'react-native';
-
-import { styles } from './styles';
+import { VaultEntry } from '@/features/vault/components/VaultEntry/VaultEntry';
 
 import type { ReactElement } from 'react';
 
-const IndexScreen = (): ReactElement => <View style={styles.container} />;
+const Index = (): ReactElement => <VaultEntry />;
 
-export default IndexScreen;
+export default Index;
