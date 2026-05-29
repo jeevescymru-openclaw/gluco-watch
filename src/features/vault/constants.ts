@@ -3,7 +3,7 @@ export const EXPERIMENT_SUBFOLDERS = ['Daily', 'Sessions', 'Attachments', 'Lingo
 export const ANALYSIS_PROMPT_FILENAME = 'Analysis Prompt.md';
 export const HELLO_FILENAME = 'hello.md';
 
-export const DEFAULT_EXPERIMENT_PATH = 'Projects/GlucoWatch';
+export const DEFAULT_EXPERIMENT_PATH = 'GlucoWatch';
 
 export const MARKDOWN_MIME_TYPE = 'text/markdown';
 

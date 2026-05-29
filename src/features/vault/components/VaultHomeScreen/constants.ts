@@ -6,5 +6,5 @@ export const VAULT_HOME_LABELS = {
   successMessage: 'Wrote hello.md. Check Obsidian once Syncthing has synced.',
   permissionError: 'Lost access to the folder. Tap "Change folder" to pick it again.',
   genericError: 'Could not write the file. Please try again.',
-  folderPrefix: 'Writing to: ',
+  folderPrefix: 'Folder: ',
 } as const;
