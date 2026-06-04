@@ -136,33 +136,48 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
     return note ? backend.readText(note.uri) : null;
   };
 
+  // SAF overwrites do not truncate — writing a shorter payload over an existing file
+  // leaves the old tail bytes behind (so a deletion appears not to take). Every write
+  // therefore goes to a freshly created (empty) file, deleting any prior one first, so
+  // the file contents are exactly what we wrote.
+  const writeFreshFile = async (
+    dailyFolderUri: string,
+    baseName: string,
+    fileName: string,
+    content: string,
+  ): Promise<string> => {
+    const existing = findChild(await backend.listChildren(dailyFolderUri), fileName);
+    if (existing) {
+      await backend.deleteFile(existing.uri);
+    }
+    const uri = await backend.createFile(dailyFolderUri, baseName, MARKDOWN_MIME_TYPE);
+    await backend.writeText(uri, content);
+    return uri;
+  };
+
   const writeNoteAtomically = async (
     dailyFolderUri: string,
     noteDate: string,
     content: string,
   ): Promise<void> => {
-    const children = await backend.listChildren(dailyFolderUri);
-
-    const existingTemp = findChild(children, dailyNoteTempFileName(noteDate));
-    const tempUri =
-      existingTemp?.uri ??
-      (await backend.createFile(
-        dailyFolderUri,
-        dailyNoteTempBaseName(noteDate),
-        MARKDOWN_MIME_TYPE,
-      ));
-    await backend.writeText(tempUri, content);
+    const tempUri = await writeFreshFile(
+      dailyFolderUri,
+      dailyNoteTempBaseName(noteDate),
+      dailyNoteTempFileName(noteDate),
+      content,
+    );
 
     const verified = await backend.readText(tempUri);
     if (verified !== content) {
       throw new Error('Daily note temp file failed verification before commit.');
     }
 
-    const existingNote = findChild(children, dailyNoteFileName(noteDate));
-    const noteUri =
-      existingNote?.uri ??
-      (await backend.createFile(dailyFolderUri, dailyNoteBaseName(noteDate), MARKDOWN_MIME_TYPE));
-    await backend.writeText(noteUri, content);
+    await writeFreshFile(
+      dailyFolderUri,
+      dailyNoteBaseName(noteDate),
+      dailyNoteFileName(noteDate),
+      content,
+    );
 
     await backend.deleteFile(tempUri);
   };

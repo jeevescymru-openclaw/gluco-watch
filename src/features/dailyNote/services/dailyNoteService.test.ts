@@ -94,7 +94,14 @@ const createFakeBackend = (): FakeBackend => {
     },
     readText: async (fileUri) => requireFile(fileUri).contents ?? '',
     writeText: async (fileUri, contents) => {
-      requireFile(fileUri).contents = contents;
+      const node = requireFile(fileUri);
+      const previous = node.contents ?? '';
+      // Simulate SAF: overwriting does not truncate, so a shorter payload leaves the
+      // old tail bytes in place. The service must write into fresh files to be correct.
+      node.contents =
+        contents.length >= previous.length
+          ? contents
+          : contents + previous.slice(contents.length);
     },
     deleteFile: async (fileUri) => {
       nodes.delete(fileUri);
@@ -280,6 +287,30 @@ describe('createDailyNoteService', () => {
           index: 0,
         },
       ]);
+    });
+
+    it('deletes an exercise using the index from the feed, as the UI does', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      const feed = await service.readEntries(EXPERIMENT_URI, NOTE_DATE);
+      const exercise = feed.find((entry) => entry.kind === 'exercise');
+      await service.deleteEntry(EXPERIMENT_URI, NOTE_DATE, 'exercise', exercise!.index);
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([
+        { kind: 'meal', time: RICE.time, description: RICE.description, index: 0 },
+      ]);
+    });
+
+    it('fully removes the last entry — a shorter note must not keep stale tail bytes', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      await service.deleteEntry(EXPERIMENT_URI, NOTE_DATE, 'exercise', 0);
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([]);
+      expect(fake.fileNamed(dailyFolderUri, NOTE_NAME)?.contents).not.toContain('Strength');
     });
   });
 
