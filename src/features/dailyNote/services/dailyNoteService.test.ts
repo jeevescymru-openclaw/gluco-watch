@@ -5,7 +5,7 @@ import { parseMeals } from '../utils/parseMeals';
 
 import { createDailyNoteService } from './dailyNoteService';
 
-import type { MealEntry, MorningEntry } from '../dailyNote.types';
+import type { ExerciseEntry, MealEntry, MorningEntry } from '../dailyNote.types';
 import type { SafBackend, SafChild } from '@/features/vault/services/safBackend.types';
 
 const EXPERIMENT_URI = 'saf://exp';
@@ -17,6 +17,7 @@ const MIME_EXTENSIONS: Record<string, string> = { [MARKDOWN_MIME_TYPE]: 'md' };
 const RICE: MealEntry = { time: '13:15', description: 'White rice, chicken, broccoli' };
 const BREAKFAST: MealEntry = { time: '08:00', description: 'Eggs and avocado' };
 const MORNING: MorningEntry = { waistCm: 84.2, bloat: 2, sleep: 4 };
+const STRENGTH: ExerciseEntry = { time: '07:30', type: 'strength', durationMin: 60, intensity: 4 };
 
 interface FakeNode {
   uri: string;
@@ -169,6 +170,38 @@ describe('createDailyNoteService', () => {
     const meals = await service.readMeals(EXPERIMENT_URI, NOTE_DATE);
 
     expect(meals).toEqual([]);
+  });
+
+  describe('exercise and the merged feed', () => {
+    it('logs an exercise session into one note alongside a meal', async () => {
+      const service = createDailyNoteService(fake.backend);
+
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      expect(fake.childNamesOf(dailyFolderUri)).toEqual([NOTE_NAME]);
+      const note = fake.fileNamed(dailyFolderUri, NOTE_NAME)?.contents ?? '';
+      expect(note).toContain('### 07:30 — Strength, 60 min, intensity 4');
+      expect(note).toContain('### 13:15 — White rice, chicken, broccoli');
+    });
+
+    it('reads meals and exercise back as one chronological feed', async () => {
+      const service = createDailyNoteService(fake.backend);
+
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([
+        { kind: 'exercise', time: '07:30', description: 'Strength, 60 min, intensity 4' },
+        { kind: 'meal', time: '13:15', description: RICE.description },
+      ]);
+    });
+
+    it('returns an empty feed when the note does not exist yet', async () => {
+      const service = createDailyNoteService(fake.backend);
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([]);
+    });
   });
 
   describe('morning entry', () => {

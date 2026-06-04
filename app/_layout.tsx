@@ -8,6 +8,7 @@ const RootLayout = (): ReactElement => (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="meal" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="exercise" options={{ presentation: 'modal' }} />
       <Stack.Screen name="morning" options={{ presentation: 'modal' }} />
     </Stack>
   </SafeAreaProvider>

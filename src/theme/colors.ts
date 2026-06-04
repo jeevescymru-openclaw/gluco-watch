@@ -9,4 +9,5 @@ export const COLORS = {
   disabled: '#9CA3AF',
   error: '#DC2626',
   success: '#047857',
+  overlay: 'rgba(0, 0, 0, 0.4)',
 } as const;

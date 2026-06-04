@@ -1,30 +1,43 @@
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton/AppButton';
 import { Fab } from '@/components/Fab/Fab';
-import { MealList } from '@/features/dailyNote/components/MealList/MealList';
-import { useDailyMeals } from '@/features/dailyNote/hooks/useDailyMeals';
+import { DailyEntryList } from '@/features/dailyNote/components/DailyEntryList/DailyEntryList';
+import { useDailyEntries } from '@/features/dailyNote/hooks/useDailyEntries';
 import { useMorningEntries } from '@/features/dailyNote/hooks/useMorningEntries';
 import { formatNoteDate } from '@/features/dailyNote/utils/dateFormat';
 import { COLORS } from '@/theme/colors';
 
+import { LogChooser } from '../LogChooser/LogChooser';
 import { MorningSummary } from '../MorningSummary/MorningSummary';
-import { HOME_LABELS, MEAL_ROUTE, MORNING_ROUTE } from './constants';
+import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE } from './constants';
 import { styles } from './styles';
 
 import type { HomeScreenProps } from './HomeScreen.types';
+import type { DailyEntryKind } from '@/features/dailyNote/dailyNote.types';
 import type { ReactElement } from 'react';
 
 export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactElement => {
   const router = useRouter();
   const noteDate = formatNoteDate(new Date());
-  const { meals, isLoading, hasError } = useDailyMeals(config.experimentFolderUri, noteDate);
+  const { entries, isLoading, hasError } = useDailyEntries(config.experimentFolderUri, noteDate);
   const { today: morning } = useMorningEntries(config.experimentFolderUri, noteDate);
+  const [isChooserVisible, setIsChooserVisible] = useState(false);
 
-  const handleAddMeal = (): void => {
-    router.push(MEAL_ROUTE);
+  const handleOpenChooser = (): void => {
+    setIsChooserVisible(true);
+  };
+
+  const handleCloseChooser = (): void => {
+    setIsChooserVisible(false);
+  };
+
+  const handleSelectKind = (kind: DailyEntryKind): void => {
+    setIsChooserVisible(false);
+    router.push(ENTRY_ROUTES[kind]);
   };
 
   const handleOpenMorning = (): void => {
@@ -46,7 +59,7 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
               <ActivityIndicator color={COLORS.primary} size="large" />
             </View>
           ) : (
-            <MealList meals={meals} />
+            <DailyEntryList entries={entries} />
           )}
         </View>
 
@@ -58,7 +71,12 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
         </View>
       </View>
 
-      <Fab accessibilityLabel={HOME_LABELS.addMeal} onPress={handleAddMeal} />
+      <Fab accessibilityLabel={HOME_LABELS.addEntry} onPress={handleOpenChooser} />
+      <LogChooser
+        onClose={handleCloseChooser}
+        onSelect={handleSelectKind}
+        visible={isChooserVisible}
+      />
     </SafeAreaView>
   );
 };

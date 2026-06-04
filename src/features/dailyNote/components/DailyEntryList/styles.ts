@@ -10,8 +10,11 @@ export const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    gap: SPACING.sm,
     alignItems: 'baseline',
+  },
+  icon: {
+    fontSize: FONT_SIZE.md,
   },
   time: {
     fontSize: FONT_SIZE.md,

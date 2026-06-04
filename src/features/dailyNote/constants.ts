@@ -1,5 +1,18 @@
 export const MEALS_HEADING = '## Meals';
 
+export const EXERCISE_HEADING = '## Exercise';
+
+// The H3 entry text for an exercise reads `Strength, 60 min, intensity 4`, kept
+// human-scannable and machine-parseable per the storage model (plan §3).
+export const EXERCISE_TYPE_LABELS = {
+  strength: 'Strength',
+  cardio: 'Cardio',
+} as const;
+
+export const EXERCISE_DURATION_UNIT = 'min';
+
+export const EXERCISE_INTENSITY_LABEL = 'intensity';
+
 export const ENTRY_HEADING_PREFIX = '### ';
 
 // U+2014 em dash, padded with single spaces. The H3 format `### HH:MM — description`

@@ -11,6 +11,26 @@ export interface ParsedMeal {
   readonly description: string;
 }
 
+export type ExerciseType = 'strength' | 'cardio';
+
+/** An exercise session to insert into a daily note. Time is the event time `HH:MM`. */
+export interface ExerciseEntry {
+  readonly time: string;
+  readonly type: ExerciseType;
+  readonly durationMin: number;
+  readonly intensity: number;
+  readonly notes?: string;
+}
+
+export type DailyEntryKind = 'meal' | 'exercise';
+
+/** A meal or exercise entry parsed from a daily note for the merged home feed. */
+export interface DailyEntry {
+  readonly kind: DailyEntryKind;
+  readonly time: string;
+  readonly description: string;
+}
+
 /**
  * The morning measurements held in a daily note's frontmatter `morning:` block.
  * Field names are the app-facing camelCase; the YAML keys (`waist_cm`, …) live in
