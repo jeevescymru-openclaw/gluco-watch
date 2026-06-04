@@ -49,7 +49,7 @@ export const createVaultService = (backend: SafBackend): VaultService => {
 
   const ensureChildDirectory = async (parentUri: string, name: string): Promise<string> => {
     const children = await backend.listChildren(parentUri);
-    const existing = children.find((child) => child.isDirectory && child.name === name);
+    const existing = children.find((child) => child.name === name);
     return existing ? existing.uri : backend.makeDirectory(parentUri, name);
   };
 
@@ -71,7 +71,7 @@ export const createVaultService = (backend: SafBackend): VaultService => {
     contents: string,
   ): Promise<string> => {
     const children = await backend.listChildren(parentUri);
-    const existing = children.find((child) => !child.isDirectory && child.name === fileName);
+    const existing = children.find((child) => child.name === fileName);
 
     if (existing) {
       await backend.writeText(existing.uri, contents);
@@ -85,7 +85,7 @@ export const createVaultService = (backend: SafBackend): VaultService => {
 
   const hasFileNamed = async (parentUri: string, fileName: string): Promise<boolean> => {
     const children = await backend.listChildren(parentUri);
-    return children.some((child) => !child.isDirectory && child.name === fileName);
+    return children.some((child) => child.name === fileName);
   };
 
   const configureExperimentFolder = async (

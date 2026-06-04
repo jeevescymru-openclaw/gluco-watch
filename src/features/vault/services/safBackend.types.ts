@@ -1,7 +1,6 @@
 export interface SafChild {
   readonly name: string;
   readonly uri: string;
-  readonly isDirectory: boolean;
 }
 
 export interface DirectoryAccessResult {
@@ -20,5 +19,7 @@ export interface SafBackend {
   listChildren(directoryUri: string): Promise<readonly SafChild[]>;
   makeDirectory(parentUri: string, name: string): Promise<string>;
   createFile(parentUri: string, baseName: string, mimeType: string): Promise<string>;
+  readText(fileUri: string): Promise<string>;
   writeText(fileUri: string, contents: string): Promise<void>;
+  deleteFile(fileUri: string): Promise<void>;
 }

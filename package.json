@@ -24,6 +24,7 @@
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
     "expo-system-ui": "~56.0.5",
+    "js-yaml": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -35,6 +36,7 @@
     "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/react": "~19.2.2",
     "eslint": "^9.39.4",
     "eslint-config-expo": "^56.0.4",

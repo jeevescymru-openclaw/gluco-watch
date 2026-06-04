@@ -1,4 +1,9 @@
-import { getInfoAsync, StorageAccessFramework, writeAsStringAsync } from 'expo-file-system/legacy';
+import {
+  deleteAsync,
+  readAsStringAsync,
+  StorageAccessFramework,
+  writeAsStringAsync,
+} from 'expo-file-system/legacy';
 
 import { getDisplayNameFromContentUri } from '../utils/safUri';
 
@@ -9,18 +14,12 @@ const requestDirectoryAccess = async (): Promise<DirectoryAccessResult> => {
   return permission.granted ? { granted: true, uri: permission.directoryUri } : { granted: false };
 };
 
+// SAF identifies children by name only. `getInfoAsync` is unreliable for
+// `content://` directory URIs (it reports `isDirectory: false`), so callers must
+// never branch on a directory flag — they match by name and find-first-then-create.
 const listChildren = async (directoryUri: string): Promise<readonly SafChild[]> => {
   const childUris = await StorageAccessFramework.readDirectoryAsync(directoryUri);
-  return Promise.all(
-    childUris.map(async (uri): Promise<SafChild> => {
-      const info = await getInfoAsync(uri);
-      return {
-        uri,
-        name: getDisplayNameFromContentUri(uri),
-        isDirectory: info.exists && info.isDirectory,
-      };
-    }),
-  );
+  return childUris.map((uri) => ({ uri, name: getDisplayNameFromContentUri(uri) }));
 };
 
 const makeDirectory = (parentUri: string, name: string): Promise<string> =>
@@ -29,13 +28,19 @@ const makeDirectory = (parentUri: string, name: string): Promise<string> =>
 const createFile = (parentUri: string, baseName: string, mimeType: string): Promise<string> =>
   StorageAccessFramework.createFileAsync(parentUri, baseName, mimeType);
 
+const readText = (fileUri: string): Promise<string> => readAsStringAsync(fileUri);
+
 const writeText = (fileUri: string, contents: string): Promise<void> =>
   writeAsStringAsync(fileUri, contents);
+
+const deleteFile = (fileUri: string): Promise<void> => deleteAsync(fileUri);
 
 export const safBackend: SafBackend = {
   requestDirectoryAccess,
   listChildren,
   makeDirectory,
   createFile,
+  readText,
   writeText,
+  deleteFile,
 };

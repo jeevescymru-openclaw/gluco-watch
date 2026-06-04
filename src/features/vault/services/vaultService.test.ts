@@ -61,11 +61,7 @@ const createFakeBackend = (): FakeBackend => {
   const backend: SafBackend = {
     requestDirectoryAccess: async () => ({ granted: true, uri: ROOT_URI }),
     listChildren: async (directoryUri): Promise<readonly SafChild[]> =>
-      childrenOf(directoryUri).map((node) => ({
-        uri: node.uri,
-        name: node.name,
-        isDirectory: node.isDirectory,
-      })),
+      childrenOf(directoryUri).map((node) => ({ uri: node.uri, name: node.name })),
     makeDirectory: async (parentUri, name) => {
       calls.makeDirectory += 1;
       return addNode(parentUri, name, true).uri;
@@ -76,6 +72,13 @@ const createFakeBackend = (): FakeBackend => {
       const name = extension ? `${baseName}.${extension}` : baseName;
       return addNode(parentUri, name, false).uri;
     },
+    readText: async (fileUri) => {
+      const node = nodes.get(fileUri);
+      if (!node) {
+        throw new Error(`No such file: ${fileUri}`);
+      }
+      return node.contents ?? '';
+    },
     writeText: async (fileUri, contents) => {
       calls.writeText += 1;
       const node = nodes.get(fileUri);
@@ -83,6 +86,9 @@ const createFakeBackend = (): FakeBackend => {
         throw new Error(`No such file: ${fileUri}`);
       }
       node.contents = contents;
+    },
+    deleteFile: async (fileUri) => {
+      nodes.delete(fileUri);
     },
   };
 

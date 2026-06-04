@@ -13,27 +13,27 @@ export const styles = StyleSheet.create({
     padding: SPACING.lg,
     gap: SPACING.md,
   },
-  title: {
+  date: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '700',
     color: COLORS.text,
   },
-  ready: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.textMuted,
+  list: {
+    flex: 1,
   },
-  successMessage: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.success,
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorMessage: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.error,
   },
-  spacer: {
-    flex: 1,
-  },
   footer: {
+    gap: SPACING.sm,
+  },
+  folderPath: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.textMuted,
   },

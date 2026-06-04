@@ -1,10 +1,10 @@
 import { ActivityIndicator, View } from 'react-native';
 
+import { HomeScreen } from '@/features/home/components/HomeScreen/HomeScreen';
 import { COLORS } from '@/theme/colors';
 
 import { useVaultConfig } from '../../hooks/useVaultConfig';
 import { ConfigurationScreen } from '../ConfigurationScreen/ConfigurationScreen';
-import { VaultHomeScreen } from '../VaultHomeScreen/VaultHomeScreen';
 import { styles } from './styles';
 
 import type { ReactElement } from 'react';
@@ -25,7 +25,7 @@ export const VaultEntry = (): ReactElement => {
   }
 
   if (status === 'configured' && config) {
-    return <VaultHomeScreen config={config} onReconfigure={handleReconfigure} />;
+    return <HomeScreen config={config} onReconfigure={handleReconfigure} />;
   }
 
   return <ConfigurationScreen onConfigured={saveConfig} />;
