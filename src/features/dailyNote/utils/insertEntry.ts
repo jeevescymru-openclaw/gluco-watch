@@ -1,22 +1,11 @@
 import { insertSorted, splitEntryBlocks } from './mealBlocks';
-import { H2_PATTERN } from './patterns';
+import { findSectionEnd, withTrailingNewline } from './sections';
 import { timeToMinutes } from './time';
 
 import type { EntryBlock } from './mealBlocks';
 
-const withTrailingNewline = (content: string): string => `${content.replace(/\s+$/, '')}\n`;
-
 const appendSection = (content: string, heading: string, entryText: string): string =>
   withTrailingNewline(`${content.replace(/\s+$/, '')}\n\n${heading}\n\n${entryText}`);
-
-const findSectionEnd = (lines: readonly string[], sectionStart: number): number => {
-  for (let index = sectionStart; index < lines.length; index += 1) {
-    if (H2_PATTERN.test(lines[index])) {
-      return index;
-    }
-  }
-  return lines.length;
-};
 
 /**
  * Inserts an entry into the named `## ` section in chronological order, creating the

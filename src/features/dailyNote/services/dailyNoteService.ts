@@ -1,6 +1,6 @@
 import { VaultPermissionError } from '@/features/vault/services/vaultService';
 
-import { DAILY_SUBFOLDER, MARKDOWN_MIME_TYPE } from '../constants';
+import { DAILY_SUBFOLDER, EXERCISE_HEADING, MARKDOWN_MIME_TYPE, MEALS_HEADING } from '../constants';
 import { createDailyNote } from '../utils/createDailyNote';
 import { insertExercise } from '../utils/insertExercise';
 import { insertMeal } from '../utils/insertMeal';
@@ -11,13 +11,18 @@ import {
   dailyNoteTempFileName,
 } from '../utils/noteFiles';
 import { parseDailyEntries } from '../utils/parseEntries';
+import { parseExerciseDetails, parseMealDetails } from '../utils/parseEntryDetails';
 import { parseMeals } from '../utils/parseMeals';
 import { parseMorning } from '../utils/parseMorning';
+import { removeSectionEntry } from '../utils/removeEntry';
 import { setMorning } from '../utils/setMorning';
 
 import type {
   DailyEntry,
+  DailyEntryKind,
+  ExerciseDetails,
   ExerciseEntry,
+  MealDetails,
   MealEntry,
   MorningEntry,
   ParsedMeal,
@@ -33,9 +38,44 @@ export interface DailyNoteService {
   ): Promise<void>;
   readMeals(experimentFolderUri: string, noteDate: string): Promise<readonly ParsedMeal[]>;
   readEntries(experimentFolderUri: string, noteDate: string): Promise<readonly DailyEntry[]>;
+  readMealDetails(
+    experimentFolderUri: string,
+    noteDate: string,
+    index: number,
+  ): Promise<MealDetails | null>;
+  readExerciseDetails(
+    experimentFolderUri: string,
+    noteDate: string,
+    index: number,
+  ): Promise<ExerciseDetails | null>;
+  updateMeal(
+    experimentFolderUri: string,
+    originalDate: string,
+    index: number,
+    newDate: string,
+    meal: MealEntry,
+  ): Promise<void>;
+  updateExercise(
+    experimentFolderUri: string,
+    originalDate: string,
+    index: number,
+    newDate: string,
+    exercise: ExerciseEntry,
+  ): Promise<void>;
+  deleteEntry(
+    experimentFolderUri: string,
+    noteDate: string,
+    kind: DailyEntryKind,
+    index: number,
+  ): Promise<void>;
   saveMorning(experimentFolderUri: string, noteDate: string, morning: MorningEntry): Promise<void>;
   readMorning(experimentFolderUri: string, noteDate: string): Promise<MorningEntry | null>;
 }
+
+const SECTION_HEADINGS: Record<DailyEntryKind, string> = {
+  meal: MEALS_HEADING,
+  exercise: EXERCISE_HEADING,
+};
 
 const findChild = (children: readonly SafChild[], name: string): SafChild | undefined =>
   children.find((child) => child.name === name);
@@ -167,6 +207,102 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       return content ? parseDailyEntries(content) : [];
     });
 
+  const readMealDetails = (
+    experimentFolderUri: string,
+    noteDate: string,
+    index: number,
+  ): Promise<MealDetails | null> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      const content = await readOrRecoverNote(dailyFolderUri, noteDate);
+      return content ? parseMealDetails(content, index) : null;
+    });
+
+  const readExerciseDetails = (
+    experimentFolderUri: string,
+    noteDate: string,
+    index: number,
+  ): Promise<ExerciseDetails | null> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      const content = await readOrRecoverNote(dailyFolderUri, noteDate);
+      return content ? parseExerciseDetails(content, index) : null;
+    });
+
+  // Updating is remove-then-insert: dropping the old block and re-inserting the edited
+  // one re-sorts it by its new time, and lets an edited date move the entry to another
+  // day's note. Same-day edits stay a single atomic write.
+  const moveEntry = async (
+    dailyFolderUri: string,
+    originalDate: string,
+    heading: string,
+    index: number,
+    newDate: string,
+    insertInto: (content: string) => string,
+  ): Promise<void> => {
+    const originalContent = await readOrRecoverNote(dailyFolderUri, originalDate);
+    const withoutEntry =
+      originalContent !== null ? removeSectionEntry(originalContent, heading, index) : null;
+
+    if (originalDate === newDate) {
+      await writeNoteAtomically(dailyFolderUri, newDate, insertInto(withoutEntry ?? createDailyNote(newDate)));
+      return;
+    }
+
+    if (withoutEntry !== null) {
+      await writeNoteAtomically(dailyFolderUri, originalDate, withoutEntry);
+    }
+    const targetExisting = await readOrRecoverNote(dailyFolderUri, newDate);
+    await writeNoteAtomically(dailyFolderUri, newDate, insertInto(targetExisting ?? createDailyNote(newDate)));
+  };
+
+  const updateMeal = (
+    experimentFolderUri: string,
+    originalDate: string,
+    index: number,
+    newDate: string,
+    meal: MealEntry,
+  ): Promise<void> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      await moveEntry(dailyFolderUri, originalDate, MEALS_HEADING, index, newDate, (content) =>
+        insertMeal(content, meal),
+      );
+    });
+
+  const updateExercise = (
+    experimentFolderUri: string,
+    originalDate: string,
+    index: number,
+    newDate: string,
+    exercise: ExerciseEntry,
+  ): Promise<void> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      await moveEntry(dailyFolderUri, originalDate, EXERCISE_HEADING, index, newDate, (content) =>
+        insertExercise(content, exercise),
+      );
+    });
+
+  const deleteEntry = (
+    experimentFolderUri: string,
+    noteDate: string,
+    kind: DailyEntryKind,
+    index: number,
+  ): Promise<void> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      const content = await readOrRecoverNote(dailyFolderUri, noteDate);
+      if (content === null) {
+        return;
+      }
+      await writeNoteAtomically(
+        dailyFolderUri,
+        noteDate,
+        removeSectionEntry(content, SECTION_HEADINGS[kind], index),
+      );
+    });
+
   const saveMorning = (
     experimentFolderUri: string,
     noteDate: string,
@@ -189,5 +325,17 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       return content ? parseMorning(content) : null;
     });
 
-  return { logMeal, logExercise, readMeals, readEntries, saveMorning, readMorning };
+  return {
+    logMeal,
+    logExercise,
+    readMeals,
+    readEntries,
+    readMealDetails,
+    readExerciseDetails,
+    updateMeal,
+    updateExercise,
+    deleteEntry,
+    saveMorning,
+    readMorning,
+  };
 };

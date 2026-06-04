@@ -32,7 +32,7 @@ export const parseSectionEntries = (content: string, heading: string): ParsedEnt
 };
 
 const sectionEntries = (content: string, heading: string, kind: DailyEntryKind): DailyEntry[] =>
-  parseSectionEntries(content, heading).map((entry) => ({ ...entry, kind }));
+  parseSectionEntries(content, heading).map((entry, index) => ({ ...entry, kind, index }));
 
 /** Merges the meals and exercise of a daily note into one chronological feed. */
 export const parseDailyEntries = (content: string): DailyEntry[] =>

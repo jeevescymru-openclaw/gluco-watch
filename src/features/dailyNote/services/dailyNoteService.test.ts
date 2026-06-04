@@ -192,8 +192,8 @@ describe('createDailyNoteService', () => {
       await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
 
       expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([
-        { kind: 'exercise', time: '07:30', description: 'Strength, 60 min, intensity 4' },
-        { kind: 'meal', time: '13:15', description: RICE.description },
+        { kind: 'exercise', time: '07:30', description: 'Strength, 60 min, intensity 4', index: 0 },
+        { kind: 'meal', time: '13:15', description: RICE.description, index: 0 },
       ]);
     });
 
@@ -201,6 +201,85 @@ describe('createDailyNoteService', () => {
       const service = createDailyNoteService(fake.backend);
 
       expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([]);
+    });
+  });
+
+  describe('editing and deleting entries', () => {
+    const OTHER_DATE = '2026-05-27';
+
+    it('reads a meal back for the edit form', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, { ...RICE, notes: 'normal portion' });
+
+      expect(await service.readMealDetails(EXPERIMENT_URI, NOTE_DATE, 0)).toEqual({
+        time: RICE.time,
+        description: RICE.description,
+        notes: 'normal portion',
+        loggedLate: false,
+      });
+    });
+
+    it('reads an exercise back as structured fields', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      expect(await service.readExerciseDetails(EXPERIMENT_URI, NOTE_DATE, 0)).toEqual({
+        time: STRENGTH.time,
+        type: STRENGTH.type,
+        durationMin: STRENGTH.durationMin,
+        intensity: STRENGTH.intensity,
+        loggedLate: false,
+      });
+    });
+
+    it('updates a meal in place and re-sorts it by its new time', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE); // 13:15
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, BREAKFAST); // 08:00
+
+      // index 0 is the 08:00 breakfast; move it to 20:00 with a new description.
+      await service.updateMeal(EXPERIMENT_URI, NOTE_DATE, 0, NOTE_DATE, {
+        time: '20:00',
+        description: 'Late dinner',
+      });
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([
+        { kind: 'meal', time: '13:15', description: RICE.description, index: 0 },
+        { kind: 'meal', time: '20:00', description: 'Late dinner', index: 1 },
+      ]);
+      expect(fake.childNamesOf(dailyFolderUri)).toEqual([NOTE_NAME]);
+    });
+
+    it('moves an entry to another day when its date is edited', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE);
+
+      await service.updateMeal(EXPERIMENT_URI, NOTE_DATE, 0, OTHER_DATE, {
+        time: '09:00',
+        description: 'Moved meal',
+      });
+
+      expect(await service.readMeals(EXPERIMENT_URI, NOTE_DATE)).toEqual([]);
+      expect(await service.readMeals(EXPERIMENT_URI, OTHER_DATE)).toEqual([
+        { time: '09:00', description: 'Moved meal' },
+      ]);
+    });
+
+    it('deletes the targeted entry and leaves the rest', async () => {
+      const service = createDailyNoteService(fake.backend);
+      await service.logMeal(EXPERIMENT_URI, NOTE_DATE, RICE);
+      await service.logExercise(EXPERIMENT_URI, NOTE_DATE, STRENGTH);
+
+      await service.deleteEntry(EXPERIMENT_URI, NOTE_DATE, 'meal', 0);
+
+      expect(await service.readEntries(EXPERIMENT_URI, NOTE_DATE)).toEqual([
+        {
+          kind: 'exercise',
+          time: STRENGTH.time,
+          description: 'Strength, 60 min, intensity 4',
+          index: 0,
+        },
+      ]);
     });
   });
 

@@ -20,6 +20,9 @@ const resolveBackgroundColor = (tone: AppButtonTone, disabled: boolean): string 
   if (disabled) {
     return COLORS.disabled;
   }
+  if (tone === 'danger') {
+    return COLORS.error;
+  }
   return tone === 'secondary' ? COLORS.surface : COLORS.primary;
 };
 

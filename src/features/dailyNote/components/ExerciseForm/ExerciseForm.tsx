@@ -1,33 +1,33 @@
 import { useState } from 'react';
-import { ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
 import { RatingSelector } from '@/components/RatingSelector/RatingSelector';
 
 import { DateTimePill } from '../DateTimePill/DateTimePill';
-import { DEFAULT_EXERCISE_TYPE, EXERCISE_FORM_LABELS } from './constants';
+import { EXERCISE_FORM_LABELS } from './constants';
 import { ExerciseTypeToggle } from './ExerciseTypeToggle/ExerciseTypeToggle';
 import { styles } from './styles';
 
 import type { ExerciseFormProps } from './ExerciseForm.types';
-import type { ExerciseType } from '../../dailyNote.types';
 import type { ReactElement } from 'react';
 
 export const ExerciseForm = ({
-  initialDateTime,
-  targetIsToday,
+  initialValues,
   isSaving,
   errorMessage,
   onSubmit,
   onCancel,
+  onDelete,
 }: ExerciseFormProps): ReactElement => {
-  const [type, setType] = useState<ExerciseType>(DEFAULT_EXERCISE_TYPE);
-  const [duration, setDuration] = useState('');
-  const [intensity, setIntensity] = useState<number | null>(null);
-  const [notes, setNotes] = useState('');
-  const [dateTime, setDateTime] = useState(initialDateTime);
+  const [type, setType] = useState(initialValues.type);
+  const [duration, setDuration] = useState(initialValues.duration);
+  const [intensity, setIntensity] = useState<number | null>(initialValues.intensity);
+  const [notes, setNotes] = useState(initialValues.notes);
+  const [dateTime, setDateTime] = useState(initialValues.dateTime);
   const [isAdjusted, setIsAdjusted] = useState(false);
 
+  const isEditing = onDelete !== undefined;
   const durationMin = Number(duration.trim());
   const isDurationValid =
     duration.trim().length > 0 && Number.isFinite(durationMin) && durationMin > 0;
@@ -48,15 +48,27 @@ export const ExerciseForm = ({
       durationMin,
       intensity,
       dateTime,
-      loggedLate: isAdjusted || !targetIsToday,
+      loggedLate: initialValues.loggedLate || isAdjusted,
       ...(trimmedNotes ? { notes: trimmedNotes } : {}),
     });
+  };
+
+  const handleDelete = (): void => {
+    if (!onDelete) {
+      return;
+    }
+    Alert.alert(EXERCISE_FORM_LABELS.deleteTitle, EXERCISE_FORM_LABELS.deleteMessage, [
+      { text: EXERCISE_FORM_LABELS.deleteCancel, style: 'cancel' },
+      { text: EXERCISE_FORM_LABELS.deleteConfirm, style: 'destructive', onPress: onDelete },
+    ]);
   };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{EXERCISE_FORM_LABELS.title}</Text>
+        <Text style={styles.title}>
+          {isEditing ? EXERCISE_FORM_LABELS.editTitle : EXERCISE_FORM_LABELS.title}
+        </Text>
 
         <DateTimePill
           disabled={isSaving}
@@ -73,7 +85,7 @@ export const ExerciseForm = ({
         <View style={styles.field}>
           <Text style={styles.label}>{EXERCISE_FORM_LABELS.durationLabel}</Text>
           <TextInput
-            autoFocus
+            autoFocus={!isEditing}
             editable={!isSaving}
             keyboardType="number-pad"
             onChangeText={setDuration}
@@ -113,6 +125,14 @@ export const ExerciseForm = ({
           label={isSaving ? EXERCISE_FORM_LABELS.saving : EXERCISE_FORM_LABELS.save}
           onPress={handleSubmit}
         />
+        {onDelete ? (
+          <AppButton
+            disabled={isSaving}
+            label={EXERCISE_FORM_LABELS.delete}
+            onPress={handleDelete}
+            tone="danger"
+          />
+        ) : null}
         <AppButton
           disabled={isSaving}
           label={EXERCISE_FORM_LABELS.cancel}

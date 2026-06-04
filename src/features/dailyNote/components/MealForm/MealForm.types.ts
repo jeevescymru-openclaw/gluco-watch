@@ -5,10 +5,10 @@ export interface MealFormValues {
 }
 
 export interface MealFormProps {
-  readonly initialDateTime: Date;
-  readonly targetIsToday: boolean;
+  readonly initialValues: MealFormValues;
   readonly isSaving: boolean;
   readonly errorMessage: string | null;
   readonly onSubmit: (values: MealFormValues) => void;
   readonly onCancel: () => void;
+  readonly onDelete?: () => void;
 }

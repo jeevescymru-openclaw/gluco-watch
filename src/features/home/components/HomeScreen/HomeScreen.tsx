@@ -19,7 +19,7 @@ import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE } from './constants';
 import { styles } from './styles';
 
 import type { HomeScreenProps } from './HomeScreen.types';
-import type { DailyEntryKind } from '@/features/dailyNote/dailyNote.types';
+import type { DailyEntry, DailyEntryKind } from '@/features/dailyNote/dailyNote.types';
 import type { ReactElement } from 'react';
 
 export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactElement => {
@@ -50,6 +50,13 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
     router.push({ pathname: MORNING_ROUTE, params: { date: selectedDate } });
   };
 
+  const handlePressEntry = (entry: DailyEntry): void => {
+    router.push({
+      pathname: ENTRY_ROUTES[entry.kind],
+      params: { date: selectedDate, index: String(entry.index) },
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -72,7 +79,7 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
               <ActivityIndicator color={COLORS.primary} size="large" />
             </View>
           ) : (
-            <DailyEntryList entries={entries} />
+            <DailyEntryList entries={entries} onPressEntry={handlePressEntry} />
           )}
         </View>
 

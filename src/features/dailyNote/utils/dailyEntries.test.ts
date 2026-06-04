@@ -63,9 +63,9 @@ describe('parseDailyEntries', () => {
     );
 
     expect(parseDailyEntries(note)).toEqual([
-      { kind: 'exercise', time: '07:30', description: 'Strength, 60 min, intensity 4' },
-      { kind: 'meal', time: '13:15', description: 'White rice, chicken' },
-      { kind: 'exercise', time: '18:00', description: 'Cardio, 30 min, intensity 3' },
+      { kind: 'exercise', time: '07:30', description: 'Strength, 60 min, intensity 4', index: 0 },
+      { kind: 'meal', time: '13:15', description: 'White rice, chicken', index: 0 },
+      { kind: 'exercise', time: '18:00', description: 'Cardio, 30 min, intensity 3', index: 1 },
     ]);
   });
 

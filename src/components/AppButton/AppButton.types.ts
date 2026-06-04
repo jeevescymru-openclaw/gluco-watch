@@ -1,4 +1,4 @@
-export type AppButtonTone = 'primary' | 'secondary';
+export type AppButtonTone = 'primary' | 'secondary' | 'danger';
 
 export interface AppButtonProps {
   readonly label: string;

@@ -31,6 +31,26 @@ export interface DailyEntry {
   readonly kind: DailyEntryKind;
   readonly time: string;
   readonly description: string;
+  /** Position within its own section (the Nth meal / Nth exercise), used to target edits. */
+  readonly index: number;
+}
+
+/** The editable fields of an existing meal, read back from its note for the edit form. */
+export interface MealDetails {
+  readonly time: string;
+  readonly description: string;
+  readonly loggedLate: boolean;
+  readonly notes?: string;
+}
+
+/** The editable fields of an existing exercise session, read back for the edit form. */
+export interface ExerciseDetails {
+  readonly time: string;
+  readonly type: ExerciseType;
+  readonly durationMin: number;
+  readonly intensity: number;
+  readonly loggedLate: boolean;
+  readonly notes?: string;
 }
 
 /**

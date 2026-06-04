@@ -1,10 +1,17 @@
 export const MEAL_FORM_LABELS = {
   title: 'Log a meal',
+  editTitle: 'Edit meal',
   descriptionLabel: 'What did you eat?',
   descriptionPlaceholder: 'e.g. White rice ~80g, chicken, broccoli',
   save: 'Save meal',
   saving: 'Saving…',
   cancel: 'Cancel',
+  delete: 'Delete meal',
+  deleteTitle: 'Delete this meal?',
+  deleteMessage: 'This removes the entry from the daily note.',
+  deleteConfirm: 'Delete',
+  deleteCancel: 'Cancel',
+  notFound: 'Could not load this meal.',
   permissionError: 'Lost access to the folder. Reopen the app and pick it again.',
   genericError: 'Could not save the meal. Please try again.',
 } as const;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Alert, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
 
@@ -11,17 +11,18 @@ import type { MealFormProps } from './MealForm.types';
 import type { ReactElement } from 'react';
 
 export const MealForm = ({
-  initialDateTime,
-  targetIsToday,
+  initialValues,
   isSaving,
   errorMessage,
   onSubmit,
   onCancel,
+  onDelete,
 }: MealFormProps): ReactElement => {
-  const [description, setDescription] = useState('');
-  const [dateTime, setDateTime] = useState(initialDateTime);
+  const [description, setDescription] = useState(initialValues.description);
+  const [dateTime, setDateTime] = useState(initialValues.dateTime);
   const [isAdjusted, setIsAdjusted] = useState(false);
 
+  const isEditing = onDelete !== undefined;
   const trimmedDescription = description.trim();
   const canSave = trimmedDescription.length > 0 && !isSaving;
 
@@ -34,13 +35,25 @@ export const MealForm = ({
     onSubmit({
       description: trimmedDescription,
       dateTime,
-      loggedLate: isAdjusted || !targetIsToday,
+      loggedLate: initialValues.loggedLate || isAdjusted,
     });
+  };
+
+  const handleDelete = (): void => {
+    if (!onDelete) {
+      return;
+    }
+    Alert.alert(MEAL_FORM_LABELS.deleteTitle, MEAL_FORM_LABELS.deleteMessage, [
+      { text: MEAL_FORM_LABELS.deleteCancel, style: 'cancel' },
+      { text: MEAL_FORM_LABELS.deleteConfirm, style: 'destructive', onPress: onDelete },
+    ]);
   };
 
   return (
     <View style={styles.content}>
-      <Text style={styles.title}>{MEAL_FORM_LABELS.title}</Text>
+      <Text style={styles.title}>
+        {isEditing ? MEAL_FORM_LABELS.editTitle : MEAL_FORM_LABELS.title}
+      </Text>
 
       <DateTimePill
         disabled={isSaving}
@@ -51,7 +64,7 @@ export const MealForm = ({
 
       <Text style={styles.label}>{MEAL_FORM_LABELS.descriptionLabel}</Text>
       <TextInput
-        autoFocus
+        autoFocus={!isEditing}
         editable={!isSaving}
         multiline
         onChangeText={setDescription}
@@ -68,6 +81,14 @@ export const MealForm = ({
         label={isSaving ? MEAL_FORM_LABELS.saving : MEAL_FORM_LABELS.save}
         onPress={handleSubmit}
       />
+      {onDelete ? (
+        <AppButton
+          disabled={isSaving}
+          label={MEAL_FORM_LABELS.delete}
+          onPress={handleDelete}
+          tone="danger"
+        />
+      ) : null}
       <AppButton
         disabled={isSaving}
         label={MEAL_FORM_LABELS.cancel}

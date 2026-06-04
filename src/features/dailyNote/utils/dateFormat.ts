@@ -60,3 +60,11 @@ export const initialEntryDateTime = (noteDate: string): Date => {
   day.setHours(DEFAULT_BACKDATE_HOUR, 0, 0, 0);
   return day;
 };
+
+/** The datetime an existing entry occupies: its note's date at its `HH:MM` event time. */
+export const entryDateTime = (noteDate: string, time: string): Date => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = parseNoteDate(noteDate);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};

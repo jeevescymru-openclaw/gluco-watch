@@ -28,6 +28,12 @@ export const useMorningEntries = (
   const [hasError, setHasError] = useState(false);
 
   const refresh = useCallback(async (): Promise<void> => {
+    // Config loads asynchronously on the modal, so the URI is briefly empty. Stay in the
+    // loading state rather than fetching with an empty URI — a failed fetch there would
+    // clear isLoading and mount the form with blank values before the real read runs.
+    if (!experimentFolderUri) {
+      return;
+    }
     setHasError(false);
     try {
       const [todayEntry, previousEntry] = await Promise.all([
