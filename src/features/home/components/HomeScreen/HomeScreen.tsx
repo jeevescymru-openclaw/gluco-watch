@@ -8,9 +8,11 @@ import { Fab } from '@/components/Fab/Fab';
 import { DailyEntryList } from '@/features/dailyNote/components/DailyEntryList/DailyEntryList';
 import { useDailyEntries } from '@/features/dailyNote/hooks/useDailyEntries';
 import { useMorningEntries } from '@/features/dailyNote/hooks/useMorningEntries';
-import { formatNoteDate } from '@/features/dailyNote/utils/dateFormat';
+import { formatRelativeDay } from '@/features/dailyNote/utils/dateFormat';
 import { COLORS } from '@/theme/colors';
 
+import { useSelectedDate } from '../../hooks/useSelectedDate';
+import { DateHeader } from '../DateHeader/DateHeader';
 import { LogChooser } from '../LogChooser/LogChooser';
 import { MorningSummary } from '../MorningSummary/MorningSummary';
 import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE } from './constants';
@@ -22,9 +24,13 @@ import type { ReactElement } from 'react';
 
 export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactElement => {
   const router = useRouter();
-  const noteDate = formatNoteDate(new Date());
-  const { entries, isLoading, hasError } = useDailyEntries(config.experimentFolderUri, noteDate);
-  const { today: morning } = useMorningEntries(config.experimentFolderUri, noteDate);
+  const { selectedDate, isToday, canGoForward, goToPreviousDay, goToNextDay, goToToday } =
+    useSelectedDate();
+  const { entries, isLoading, hasError } = useDailyEntries(
+    config.experimentFolderUri,
+    selectedDate,
+  );
+  const { today: morning } = useMorningEntries(config.experimentFolderUri, selectedDate);
   const [isChooserVisible, setIsChooserVisible] = useState(false);
 
   const handleOpenChooser = (): void => {
@@ -37,17 +43,24 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
 
   const handleSelectKind = (kind: DailyEntryKind): void => {
     setIsChooserVisible(false);
-    router.push(ENTRY_ROUTES[kind]);
+    router.push({ pathname: ENTRY_ROUTES[kind], params: { date: selectedDate } });
   };
 
   const handleOpenMorning = (): void => {
-    router.push(MORNING_ROUTE);
+    router.push({ pathname: MORNING_ROUTE, params: { date: selectedDate } });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.date}>{noteDate}</Text>
+        <DateHeader
+          canGoForward={canGoForward}
+          isToday={isToday}
+          label={formatRelativeDay(selectedDate)}
+          onNextDay={goToNextDay}
+          onPreviousDay={goToPreviousDay}
+          onToday={goToToday}
+        />
 
         {hasError ? <Text style={styles.errorMessage}>{HOME_LABELS.readError}</Text> : null}
 

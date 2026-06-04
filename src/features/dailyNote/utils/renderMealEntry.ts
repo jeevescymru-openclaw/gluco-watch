@@ -1,4 +1,5 @@
-import { ENTRY_HEADING_PREFIX, NOTES_PREFIX, TIME_DESCRIPTION_SEPARATOR } from '../constants';
+import { ENTRY_HEADING_PREFIX, TIME_DESCRIPTION_SEPARATOR } from '../constants';
+import { renderNotesLine } from './renderNotesLine';
 
 import type { MealEntry } from '../dailyNote.types';
 
@@ -9,6 +10,6 @@ const toSingleLine = (text: string): string => text.replace(/\s+/g, ' ').trim();
 export const renderMealEntry = (meal: MealEntry): string => {
   const description = toSingleLine(meal.description);
   const heading = `${ENTRY_HEADING_PREFIX}${meal.time}${TIME_DESCRIPTION_SEPARATOR}${description}`;
-  const trimmedNotes = meal.notes?.trim();
-  return trimmedNotes ? `${heading}\n${NOTES_PREFIX}${trimmedNotes}` : heading;
+  const notesLine = renderNotesLine(meal.notes, meal.loggedLate);
+  return notesLine ? `${heading}\n${notesLine}` : heading;
 };

@@ -13,11 +13,6 @@ export const styles = StyleSheet.create({
     padding: SPACING.lg,
     gap: SPACING.md,
   },
-  date: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
   list: {
     flex: 1,
   },

@@ -42,6 +42,35 @@ export const MORNING_CHILD_INDENT = '  ';
 
 export const WAIST_UNIT = 'cm';
 
+// Appended to a backdated entry's notes line so the analysis agent knows the
+// timestamp was reconstructed after the fact and may be approximate (plan §4).
+export const LOGGED_LATE_MARKER = '(logged late)';
+
+// A browsed past day has no obvious event time, so its picker defaults to midday.
+export const DEFAULT_BACKDATE_HOUR = 12;
+
+export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+export const MONTH_LABELS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
+export const RELATIVE_DAY_LABELS = {
+  today: 'Today',
+  yesterday: 'Yesterday',
+} as const;
+
 export const DAILY_SUBFOLDER = 'Daily';
 
 export const MARKDOWN_MIME_TYPE = 'text/markdown';

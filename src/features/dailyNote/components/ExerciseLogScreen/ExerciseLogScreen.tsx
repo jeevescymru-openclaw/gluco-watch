@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +8,12 @@ import { VaultPermissionError } from '@/features/vault/services/vaultService';
 import { COLORS } from '@/theme/colors';
 
 import { dailyNoteService } from '../../services/dailyNoteServiceInstance';
-import { formatEntryTime, formatNoteDate } from '../../utils/dateFormat';
+import {
+  formatEntryTime,
+  formatNoteDate,
+  initialEntryDateTime,
+  isNoteDateToday,
+} from '../../utils/dateFormat';
 import { EXERCISE_FORM_LABELS } from '../ExerciseForm/constants';
 import { ExerciseForm } from '../ExerciseForm/ExerciseForm';
 import { styles } from './styles';
@@ -18,11 +23,14 @@ import type { ReactElement } from 'react';
 
 export const ExerciseLogScreen = (): ReactElement => {
   const router = useRouter();
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const { status, config } = useVaultConfig();
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const saveExercise = async (exercise: ExerciseFormValues): Promise<void> => {
+  const targetDate = date ?? formatNoteDate(new Date());
+
+  const saveExercise = async (values: ExerciseFormValues): Promise<void> => {
     if (!config) {
       return;
     }
@@ -31,11 +39,18 @@ export const ExerciseLogScreen = (): ReactElement => {
     setErrorMessage(null);
 
     try {
-      const now = new Date();
-      await dailyNoteService.logExercise(config.experimentFolderUri, formatNoteDate(now), {
-        time: formatEntryTime(now),
-        ...exercise,
-      });
+      await dailyNoteService.logExercise(
+        config.experimentFolderUri,
+        formatNoteDate(values.dateTime),
+        {
+          time: formatEntryTime(values.dateTime),
+          type: values.type,
+          durationMin: values.durationMin,
+          intensity: values.intensity,
+          loggedLate: values.loggedLate,
+          ...(values.notes ? { notes: values.notes } : {}),
+        },
+      );
       router.back();
     } catch (error) {
       setErrorMessage(
@@ -47,8 +62,8 @@ export const ExerciseLogScreen = (): ReactElement => {
     }
   };
 
-  const handleSubmit = (exercise: ExerciseFormValues): void => {
-    void saveExercise(exercise);
+  const handleSubmit = (values: ExerciseFormValues): void => {
+    void saveExercise(values);
   };
 
   const handleCancel = (): void => {
@@ -67,9 +82,11 @@ export const ExerciseLogScreen = (): ReactElement => {
     <SafeAreaView style={styles.container}>
       <ExerciseForm
         errorMessage={errorMessage}
+        initialDateTime={initialEntryDateTime(targetDate)}
         isSaving={isSaving}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
+        targetIsToday={isNoteDateToday(targetDate)}
       />
     </SafeAreaView>
   );

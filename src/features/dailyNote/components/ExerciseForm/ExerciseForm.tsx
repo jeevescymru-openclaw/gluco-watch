@@ -4,6 +4,7 @@ import { ScrollView, Text, TextInput, View } from 'react-native';
 import { AppButton } from '@/components/AppButton/AppButton';
 import { RatingSelector } from '@/components/RatingSelector/RatingSelector';
 
+import { DateTimePill } from '../DateTimePill/DateTimePill';
 import { DEFAULT_EXERCISE_TYPE, EXERCISE_FORM_LABELS } from './constants';
 import { ExerciseTypeToggle } from './ExerciseTypeToggle/ExerciseTypeToggle';
 import { styles } from './styles';
@@ -13,6 +14,8 @@ import type { ExerciseType } from '../../dailyNote.types';
 import type { ReactElement } from 'react';
 
 export const ExerciseForm = ({
+  initialDateTime,
+  targetIsToday,
   isSaving,
   errorMessage,
   onSubmit,
@@ -22,11 +25,18 @@ export const ExerciseForm = ({
   const [duration, setDuration] = useState('');
   const [intensity, setIntensity] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
+  const [dateTime, setDateTime] = useState(initialDateTime);
+  const [isAdjusted, setIsAdjusted] = useState(false);
 
   const durationMin = Number(duration.trim());
   const isDurationValid =
     duration.trim().length > 0 && Number.isFinite(durationMin) && durationMin > 0;
   const canSave = isDurationValid && intensity !== null && !isSaving;
+
+  const handleDateTimeChange = (next: Date): void => {
+    setDateTime(next);
+    setIsAdjusted(true);
+  };
 
   const handleSubmit = (): void => {
     if (!canSave || intensity === null) {
@@ -37,6 +47,8 @@ export const ExerciseForm = ({
       type,
       durationMin,
       intensity,
+      dateTime,
+      loggedLate: isAdjusted || !targetIsToday,
       ...(trimmedNotes ? { notes: trimmedNotes } : {}),
     });
   };
@@ -45,6 +57,13 @@ export const ExerciseForm = ({
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>{EXERCISE_FORM_LABELS.title}</Text>
+
+        <DateTimePill
+          disabled={isSaving}
+          maximumDate={new Date()}
+          onChange={handleDateTimeChange}
+          value={dateTime}
+        />
 
         <View style={styles.field}>
           <Text style={styles.label}>{EXERCISE_FORM_LABELS.typeLabel}</Text>

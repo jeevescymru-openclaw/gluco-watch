@@ -3,6 +3,7 @@ import { Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
 
+import { DateTimePill } from '../DateTimePill/DateTimePill';
 import { MEAL_FORM_LABELS } from './constants';
 import { styles } from './styles';
 
@@ -10,23 +11,43 @@ import type { MealFormProps } from './MealForm.types';
 import type { ReactElement } from 'react';
 
 export const MealForm = ({
+  initialDateTime,
+  targetIsToday,
   isSaving,
   errorMessage,
   onSubmit,
   onCancel,
 }: MealFormProps): ReactElement => {
   const [description, setDescription] = useState('');
+  const [dateTime, setDateTime] = useState(initialDateTime);
+  const [isAdjusted, setIsAdjusted] = useState(false);
 
   const trimmedDescription = description.trim();
   const canSave = trimmedDescription.length > 0 && !isSaving;
 
+  const handleDateTimeChange = (next: Date): void => {
+    setDateTime(next);
+    setIsAdjusted(true);
+  };
+
   const handleSubmit = (): void => {
-    onSubmit(trimmedDescription);
+    onSubmit({
+      description: trimmedDescription,
+      dateTime,
+      loggedLate: isAdjusted || !targetIsToday,
+    });
   };
 
   return (
     <View style={styles.content}>
       <Text style={styles.title}>{MEAL_FORM_LABELS.title}</Text>
+
+      <DateTimePill
+        disabled={isSaving}
+        maximumDate={new Date()}
+        onChange={handleDateTimeChange}
+        value={dateTime}
+      />
 
       <Text style={styles.label}>{MEAL_FORM_LABELS.descriptionLabel}</Text>
       <TextInput

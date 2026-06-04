@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import { COLORS } from '@/theme/colors';
 
 import { useMorningEntries } from '../../hooks/useMorningEntries';
 import { dailyNoteService } from '../../services/dailyNoteServiceInstance';
-import { formatNoteDate, shiftNoteDate } from '../../utils/dateFormat';
+import { formatNoteDate, parseNoteDate, shiftNoteDate } from '../../utils/dateFormat';
 import { MORNING_FORM_LABELS } from '../MorningForm/constants';
 import { MorningForm } from '../MorningForm/MorningForm';
 import { styles } from './styles';
@@ -21,13 +21,13 @@ const PREVIOUS_DAY_OFFSET = -1;
 
 export const MorningLogScreen = (): ReactElement => {
   const router = useRouter();
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const { status, config } = useVaultConfig();
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const today = new Date();
-  const noteDate = formatNoteDate(today);
-  const previousDate = shiftNoteDate(today, PREVIOUS_DAY_OFFSET);
+  const noteDate = date ?? formatNoteDate(new Date());
+  const previousDate = shiftNoteDate(parseNoteDate(noteDate), PREVIOUS_DAY_OFFSET);
   const experimentFolderUri = config?.experimentFolderUri ?? '';
   const entries = useMorningEntries(experimentFolderUri, noteDate, previousDate);
 

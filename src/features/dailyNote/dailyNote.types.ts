@@ -3,6 +3,7 @@ export interface MealEntry {
   readonly time: string;
   readonly description: string;
   readonly notes?: string;
+  readonly loggedLate?: boolean;
 }
 
 /** A meal parsed back out of a daily note for display on the home screen. */
@@ -20,6 +21,7 @@ export interface ExerciseEntry {
   readonly durationMin: number;
   readonly intensity: number;
   readonly notes?: string;
+  readonly loggedLate?: boolean;
 }
 
 export type DailyEntryKind = 'meal' | 'exercise';
