@@ -4,8 +4,11 @@ import { COLORS } from '@/theme/colors';
 import { FONT_SIZE, RADIUS, SPACING } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
-  content: {
+  container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: SPACING.lg,
     gap: SPACING.md,
   },
@@ -28,15 +31,16 @@ export const styles = StyleSheet.create({
     color: COLORS.text,
     textAlignVertical: 'top',
   },
-  errorMessage: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.error,
-  },
   photoStatus: {
     fontSize: FONT_SIZE.md,
     color: COLORS.text,
   },
-  spacer: {
-    flex: 1,
+  footer: {
+    padding: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  errorMessage: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.error,
   },
 });

@@ -69,6 +69,21 @@ describe('parseMealDetails', () => {
     });
   });
 
+  it('reads back a photo-only meal logged with no description', () => {
+    const note = insertMeal(createDailyNote(NOTE_DATE), {
+      time: '12:30',
+      description: '',
+      photoPath: 'Attachments/2026-05-26-1230-meal.jpg',
+    });
+
+    expect(parseMealDetails(note, 0)).toEqual({
+      time: '12:30',
+      description: '',
+      loggedLate: false,
+      photoPath: 'Attachments/2026-05-26-1230-meal.jpg',
+    });
+  });
+
   it('returns null for an out-of-range index', () => {
     expect(parseMealDetails(createDailyNote(NOTE_DATE), 0)).toBeNull();
   });

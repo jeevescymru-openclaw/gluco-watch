@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
 
@@ -30,8 +30,8 @@ export const MealForm = ({
 
   const isEditing = onDelete !== undefined;
   const trimmedDescription = description.trim();
-  const canSave = trimmedDescription.length > 0 && !isSaving;
   const hasPhoto = newPhotoUri !== null || keptPhotoPath !== null;
+  const canSave = (trimmedDescription.length > 0 || hasPhoto) && !isSaving;
 
   const applyCapture = useCallback((captured: CapturedPhoto): void => {
     setNewPhotoUri(captured.uri);
@@ -90,76 +90,78 @@ export const MealForm = ({
   };
 
   return (
-    <View style={styles.content}>
-      <Text style={styles.title}>
-        {isEditing ? MEAL_FORM_LABELS.editTitle : MEAL_FORM_LABELS.title}
-      </Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>
+          {isEditing ? MEAL_FORM_LABELS.editTitle : MEAL_FORM_LABELS.title}
+        </Text>
 
-      <DateTimePill
-        disabled={isSaving}
-        maximumDate={new Date()}
-        onChange={handleDateTimeChange}
-        value={dateTime}
-      />
+        <DateTimePill
+          disabled={isSaving}
+          maximumDate={new Date()}
+          onChange={handleDateTimeChange}
+          value={dateTime}
+        />
 
-      {hasPhoto ? (
-        <>
-          <Text style={styles.photoStatus}>{MEAL_FORM_LABELS.photoAttached}</Text>
+        {hasPhoto ? (
+          <>
+            <Text style={styles.photoStatus}>{MEAL_FORM_LABELS.photoAttached}</Text>
+            <AppButton
+              disabled={isSaving}
+              label={MEAL_FORM_LABELS.retakePhoto}
+              onPress={handleCapture}
+              tone="secondary"
+            />
+            <AppButton
+              disabled={isSaving}
+              label={MEAL_FORM_LABELS.removePhoto}
+              onPress={handleRemovePhoto}
+              tone="secondary"
+            />
+          </>
+        ) : (
           <AppButton
             disabled={isSaving}
-            label={MEAL_FORM_LABELS.retakePhoto}
+            label={MEAL_FORM_LABELS.takePhoto}
             onPress={handleCapture}
             tone="secondary"
           />
+        )}
+
+        <Text style={styles.label}>{MEAL_FORM_LABELS.descriptionLabel}</Text>
+        <TextInput
+          autoFocus={isEditing}
+          editable={!isSaving}
+          multiline
+          onChangeText={setDescription}
+          placeholder={MEAL_FORM_LABELS.descriptionPlaceholder}
+          style={styles.input}
+          value={description}
+        />
+      </ScrollView>
+
+      <View style={styles.footer}>
+        {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+        <AppButton
+          disabled={!canSave}
+          label={isSaving ? MEAL_FORM_LABELS.saving : MEAL_FORM_LABELS.save}
+          onPress={handleSubmit}
+        />
+        {onDelete ? (
           <AppButton
             disabled={isSaving}
-            label={MEAL_FORM_LABELS.removePhoto}
-            onPress={handleRemovePhoto}
-            tone="secondary"
+            label={MEAL_FORM_LABELS.delete}
+            onPress={handleDelete}
+            tone="danger"
           />
-        </>
-      ) : (
+        ) : null}
         <AppButton
           disabled={isSaving}
-          label={MEAL_FORM_LABELS.takePhoto}
-          onPress={() => void handleCapture()}
+          label={MEAL_FORM_LABELS.cancel}
+          onPress={onCancel}
           tone="secondary"
         />
-      )}
-
-      <Text style={styles.label}>{MEAL_FORM_LABELS.descriptionLabel}</Text>
-      <TextInput
-        autoFocus={isEditing}
-        editable={!isSaving}
-        multiline
-        onChangeText={setDescription}
-        placeholder={MEAL_FORM_LABELS.descriptionPlaceholder}
-        style={styles.input}
-        value={description}
-      />
-
-      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
-
-      <View style={styles.spacer} />
-      <AppButton
-        disabled={!canSave}
-        label={isSaving ? MEAL_FORM_LABELS.saving : MEAL_FORM_LABELS.save}
-        onPress={handleSubmit}
-      />
-      {onDelete ? (
-        <AppButton
-          disabled={isSaving}
-          label={MEAL_FORM_LABELS.delete}
-          onPress={handleDelete}
-          tone="danger"
-        />
-      ) : null}
-      <AppButton
-        disabled={isSaving}
-        label={MEAL_FORM_LABELS.cancel}
-        onPress={onCancel}
-        tone="secondary"
-      />
+      </View>
     </View>
   );
 };
