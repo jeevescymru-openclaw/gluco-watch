@@ -2,6 +2,10 @@ import type { GlucoseSourceId } from './glucose.types';
 
 export const LINGO_EXPORTS_SUBFOLDER = 'Lingo Exports';
 
+export const CSV_MIME_TYPE = 'text/csv';
+
+export const CSV_FILE_EXTENSION = 'csv';
+
 export const GLUCOSE_UNIT = 'mmol/L';
 
 export const AUC_UNIT = 'mmol/L·min';

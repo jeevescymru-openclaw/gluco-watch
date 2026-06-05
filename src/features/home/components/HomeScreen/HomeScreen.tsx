@@ -16,7 +16,13 @@ import { useSelectedDate } from '../../hooks/useSelectedDate';
 import { DateHeader } from '../DateHeader/DateHeader';
 import { LogChooser } from '../LogChooser/LogChooser';
 import { MorningSummary } from '../MorningSummary/MorningSummary';
-import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE, SETTINGS_ROUTE } from './constants';
+import {
+  ENTRY_ROUTES,
+  GLUCOSE_IMPORT_ROUTE,
+  HOME_LABELS,
+  MORNING_ROUTE,
+  SETTINGS_ROUTE,
+} from './constants';
 import { styles } from './styles';
 
 import type { HomeScreenProps } from './HomeScreen.types';
@@ -63,6 +69,10 @@ export const HomeScreen = ({ config }: HomeScreenProps): ReactElement => {
     router.push(SETTINGS_ROUTE);
   };
 
+  const handleImportGlucose = (): void => {
+    router.push(GLUCOSE_IMPORT_ROUTE);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -93,6 +103,11 @@ export const HomeScreen = ({ config }: HomeScreenProps): ReactElement => {
           <Text numberOfLines={1} style={styles.folderPath}>
             {`${HOME_LABELS.folderPrefix}${config.experimentFolderPath}`}
           </Text>
+          <AppButton
+            label={HOME_LABELS.importGlucose}
+            onPress={handleImportGlucose}
+            tone="secondary"
+          />
           <AppButton label={HOME_LABELS.settings} onPress={handleOpenSettings} tone="secondary" />
         </View>
       </View>

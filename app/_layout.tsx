@@ -14,6 +14,7 @@ const RootLayout = (): ReactElement => (
         <Stack.Screen name="exercise" options={{ presentation: 'modal' }} />
         <Stack.Screen name="morning" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="glucose-import" options={{ presentation: 'modal' }} />
       </Stack>
     </VaultConfigProvider>
   </SafeAreaProvider>

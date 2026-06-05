@@ -78,6 +78,12 @@ export interface DailyNoteService {
   ): Promise<void>;
   saveMorning(experimentFolderUri: string, noteDate: string, morning: MorningEntry): Promise<void>;
   readMorning(experimentFolderUri: string, noteDate: string): Promise<MorningEntry | null>;
+  /** The dates (`YYYY-MM-DD`) of every existing daily note, oldest-first. */
+  listNoteDates(experimentFolderUri: string): Promise<readonly string[]>;
+  /** The raw markdown of a daily note, or null if it doesn't exist. */
+  readNote(experimentFolderUri: string, noteDate: string): Promise<string | null>;
+  /** Atomically overwrites a daily note with new markdown. */
+  writeNote(experimentFolderUri: string, noteDate: string, content: string): Promise<void>;
   /** Copies a captured photo into `Attachments/` and returns its vault-relative embed path. */
   saveMealPhoto(
     experimentFolderUri: string,
@@ -93,6 +99,9 @@ const SECTION_HEADINGS: Record<DailyEntryKind, string> = {
 
 const findChild = (children: readonly SafChild[], name: string): SafChild | undefined =>
   children.find((child) => child.name === name);
+
+// Matches a committed daily note `2026-05-26.md` but not its `.tmp.md` working file.
+const NOTE_DATE_FILE_PATTERN = /^(\d{4}-\d{2}-\d{2})\.md$/;
 
 export const createDailyNoteService = (backend: SafBackend): DailyNoteService => {
   const guard = async <TResult>(operation: () => Promise<TResult>): Promise<TResult> => {
@@ -365,6 +374,32 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       return content ? parseMorning(content) : null;
     });
 
+  const listNoteDates = (experimentFolderUri: string): Promise<readonly string[]> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      const children = await backend.listChildren(dailyFolderUri);
+      return children
+        .map((child) => NOTE_DATE_FILE_PATTERN.exec(child.name)?.[1])
+        .filter((date): date is string => date !== undefined)
+        .sort();
+    });
+
+  const readNote = (experimentFolderUri: string, noteDate: string): Promise<string | null> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      return readOrRecoverNote(dailyFolderUri, noteDate);
+    });
+
+  const writeNote = (
+    experimentFolderUri: string,
+    noteDate: string,
+    content: string,
+  ): Promise<void> =>
+    guard(async () => {
+      const dailyFolderUri = await resolveDailyFolder(experimentFolderUri);
+      await writeNoteAtomically(dailyFolderUri, noteDate, content);
+    });
+
   const saveMealPhoto = (
     experimentFolderUri: string,
     dateTime: Date,
@@ -393,6 +428,9 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
     deleteEntry,
     saveMorning,
     readMorning,
+    listNoteDates,
+    readNote,
+    writeNote,
     saveMealPhoto,
   };
 };

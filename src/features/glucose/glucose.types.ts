@@ -33,3 +33,22 @@ export interface GlucoseSummary {
  * precedence (amendment §6c). `pending` is a preview-only state, never written.
  */
 export type MealClassification = 'new' | 'replace' | 'protected' | 'pending';
+
+/** One meal in the import preview: its computed summary and how it would be applied. */
+export interface GlucosePreviewMeal {
+  readonly noteDate: string;
+  readonly mealIndex: number;
+  readonly mealTime: string;
+  readonly description: string;
+  readonly classification: MealClassification;
+  readonly summary: GlucoseSummary;
+}
+
+/** The full result of reading a source and matching it to logged meals, shown for confirmation. */
+export interface GlucoseImportPlan {
+  readonly sourceId: GlucoseSourceId;
+  readonly exportFileName: string;
+  readonly rangeFrom: string;
+  readonly rangeTo: string;
+  readonly meals: readonly GlucosePreviewMeal[];
+}
