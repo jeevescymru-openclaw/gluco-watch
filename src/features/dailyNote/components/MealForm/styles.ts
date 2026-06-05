@@ -4,9 +4,6 @@ import { COLORS } from '@/theme/colors';
 import { FONT_SIZE, RADIUS, SPACING } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
     padding: SPACING.lg,

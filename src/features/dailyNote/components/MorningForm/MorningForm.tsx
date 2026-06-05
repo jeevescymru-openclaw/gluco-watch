@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
+import { KeyboardAvoidingScreen } from '@/components/KeyboardAvoidingScreen/KeyboardAvoidingScreen';
 import { formatRating } from '@/components/RatingSelector/formatRating';
 import { RatingSelector } from '@/components/RatingSelector/RatingSelector';
 
@@ -52,7 +53,7 @@ export const MorningForm = ({
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingScreen>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>{MORNING_FORM_LABELS.title}</Text>
         {yesterday ? <Text style={styles.yesterday}>{formatYesterday(yesterday)}</Text> : null}
@@ -117,6 +118,6 @@ export const MorningForm = ({
           tone="secondary"
         />
       </View>
-    </View>
+    </KeyboardAvoidingScreen>
   );
 };

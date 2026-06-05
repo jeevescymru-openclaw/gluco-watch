@@ -13,9 +13,6 @@ const INPUT_BASE = {
 } as const;
 
 export const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
     padding: SPACING.lg,

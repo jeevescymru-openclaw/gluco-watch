@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
+import { KeyboardAvoidingScreen } from '@/components/KeyboardAvoidingScreen/KeyboardAvoidingScreen';
 import { RatingSelector } from '@/components/RatingSelector/RatingSelector';
 
 import { DateTimePill } from '../DateTimePill/DateTimePill';
@@ -64,7 +65,7 @@ export const ExerciseForm = ({
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingScreen>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>
           {isEditing ? EXERCISE_FORM_LABELS.editTitle : EXERCISE_FORM_LABELS.title}
@@ -140,6 +141,6 @@ export const ExerciseForm = ({
           tone="secondary"
         />
       </View>
-    </View>
+    </KeyboardAvoidingScreen>
   );
 };

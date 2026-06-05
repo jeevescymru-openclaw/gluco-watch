@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton/AppButton';
+import { KeyboardAvoidingScreen } from '@/components/KeyboardAvoidingScreen/KeyboardAvoidingScreen';
 
 import { capturePhoto } from '../../utils/capturePhoto';
 import { DateTimePill } from '../DateTimePill/DateTimePill';
@@ -90,7 +91,7 @@ export const MealForm = ({
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingScreen>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>
           {isEditing ? MEAL_FORM_LABELS.editTitle : MEAL_FORM_LABELS.title}
@@ -162,6 +163,6 @@ export const MealForm = ({
           tone="secondary"
         />
       </View>
-    </View>
+    </KeyboardAvoidingScreen>
   );
 };
