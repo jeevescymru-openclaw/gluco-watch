@@ -10,11 +10,7 @@ import { styles } from './styles';
 import type { ReactElement } from 'react';
 
 export const VaultEntry = (): ReactElement => {
-  const { status, config, saveConfig, clearConfig } = useVaultConfig();
-
-  const handleReconfigure = (): void => {
-    void clearConfig();
-  };
+  const { status, config, saveConfig } = useVaultConfig();
 
   if (status === 'loading') {
     return (
@@ -25,7 +21,7 @@ export const VaultEntry = (): ReactElement => {
   }
 
   if (status === 'configured' && config) {
-    return <HomeScreen config={config} onReconfigure={handleReconfigure} />;
+    return <HomeScreen config={config} />;
   }
 
   return <ConfigurationScreen onConfigured={saveConfig} />;

@@ -9,21 +9,23 @@ import { DailyEntryList } from '@/features/dailyNote/components/DailyEntryList/D
 import { useDailyEntries } from '@/features/dailyNote/hooks/useDailyEntries';
 import { useMorningEntries } from '@/features/dailyNote/hooks/useMorningEntries';
 import { formatRelativeDay } from '@/features/dailyNote/utils/dateFormat';
+import { useMorningReminder } from '@/features/notifications/hooks/useMorningReminder';
 import { COLORS } from '@/theme/colors';
 
 import { useSelectedDate } from '../../hooks/useSelectedDate';
 import { DateHeader } from '../DateHeader/DateHeader';
 import { LogChooser } from '../LogChooser/LogChooser';
 import { MorningSummary } from '../MorningSummary/MorningSummary';
-import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE } from './constants';
+import { ENTRY_ROUTES, HOME_LABELS, MORNING_ROUTE, SETTINGS_ROUTE } from './constants';
 import { styles } from './styles';
 
 import type { HomeScreenProps } from './HomeScreen.types';
 import type { DailyEntry, DailyEntryKind } from '@/features/dailyNote/dailyNote.types';
 import type { ReactElement } from 'react';
 
-export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactElement => {
+export const HomeScreen = ({ config }: HomeScreenProps): ReactElement => {
   const router = useRouter();
+  useMorningReminder();
   const { selectedDate, isToday, canGoForward, goToPreviousDay, goToNextDay, goToToday } =
     useSelectedDate();
   const { entries, isLoading, hasError } = useDailyEntries(
@@ -57,6 +59,10 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
     });
   };
 
+  const handleOpenSettings = (): void => {
+    router.push(SETTINGS_ROUTE);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -87,7 +93,7 @@ export const HomeScreen = ({ config, onReconfigure }: HomeScreenProps): ReactEle
           <Text numberOfLines={1} style={styles.folderPath}>
             {`${HOME_LABELS.folderPrefix}${config.experimentFolderPath}`}
           </Text>
-          <AppButton label={HOME_LABELS.changeFolder} onPress={onReconfigure} tone="secondary" />
+          <AppButton label={HOME_LABELS.settings} onPress={handleOpenSettings} tone="secondary" />
         </View>
       </View>
 

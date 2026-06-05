@@ -22,4 +22,15 @@ export interface SafBackend {
   readText(fileUri: string): Promise<string>;
   writeText(fileUri: string, contents: string): Promise<void>;
   deleteFile(fileUri: string): Promise<void>;
+  /**
+   * Copies a local file (e.g. a camera capture `file://` URI) into the SAF folder,
+   * returning the created child. The actual stored name may differ from `baseName`
+   * (SAF appends the extension and de-duplicates), so callers use the returned name.
+   */
+  copyLocalFile(
+    parentUri: string,
+    baseName: string,
+    mimeType: string,
+    localUri: string,
+  ): Promise<SafChild>;
 }

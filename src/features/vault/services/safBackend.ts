@@ -1,5 +1,6 @@
 import {
   deleteAsync,
+  EncodingType,
   readAsStringAsync,
   StorageAccessFramework,
   writeAsStringAsync,
@@ -35,6 +36,18 @@ const writeText = (fileUri: string, contents: string): Promise<void> =>
 
 const deleteFile = (fileUri: string): Promise<void> => deleteAsync(fileUri);
 
+const copyLocalFile = async (
+  parentUri: string,
+  baseName: string,
+  mimeType: string,
+  localUri: string,
+): Promise<SafChild> => {
+  const uri = await StorageAccessFramework.createFileAsync(parentUri, baseName, mimeType);
+  const data = await readAsStringAsync(localUri, { encoding: EncodingType.Base64 });
+  await writeAsStringAsync(uri, data, { encoding: EncodingType.Base64 });
+  return { uri, name: getDisplayNameFromContentUri(uri) };
+};
+
 export const safBackend: SafBackend = {
   requestDirectoryAccess,
   listChildren,
@@ -43,4 +56,5 @@ export const safBackend: SafBackend = {
   readText,
   writeText,
   deleteFile,
+  copyLocalFile,
 };

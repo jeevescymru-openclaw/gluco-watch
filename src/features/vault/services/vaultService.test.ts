@@ -90,6 +90,10 @@ const createFakeBackend = (): FakeBackend => {
     deleteFile: async (fileUri) => {
       nodes.delete(fileUri);
     },
+    copyLocalFile: async (parentUri, baseName) => {
+      const node = addNode(parentUri, baseName, false);
+      return { uri: node.uri, name: node.name };
+    },
   };
 
   return {

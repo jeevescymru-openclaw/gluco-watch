@@ -4,6 +4,8 @@ export interface MealEntry {
   readonly description: string;
   readonly notes?: string;
   readonly loggedLate?: boolean;
+  /** Vault-relative path of the meal photo, e.g. `Attachments/2026-05-26-1315-meal.jpg`. */
+  readonly photoPath?: string;
 }
 
 /** A meal parsed back out of a daily note for display on the home screen. */
@@ -41,6 +43,7 @@ export interface MealDetails {
   readonly description: string;
   readonly loggedLate: boolean;
   readonly notes?: string;
+  readonly photoPath?: string;
 }
 
 /** The editable fields of an existing exercise session, read back for the edit form. */

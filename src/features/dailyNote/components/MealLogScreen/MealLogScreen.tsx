@@ -61,13 +61,22 @@ export const MealLogScreen = (): ReactElement => {
     setErrorMessage(null);
 
     const newDate = formatNoteDate(values.dateTime);
-    const meal = {
-      time: formatEntryTime(values.dateTime),
-      description: values.description,
-      loggedLate: values.loggedLate,
-    };
 
     try {
+      const photoPath = values.newPhotoUri
+        ? await dailyNoteService.saveMealPhoto(
+            config.experimentFolderUri,
+            values.dateTime,
+            values.newPhotoUri,
+          )
+        : values.photoPath;
+      const meal = {
+        time: formatEntryTime(values.dateTime),
+        description: values.description,
+        loggedLate: values.loggedLate,
+        ...(photoPath ? { photoPath } : {}),
+      };
+
       if (isEdit && editIndex !== undefined) {
         await dailyNoteService.updateMeal(
           config.experimentFolderUri,
@@ -127,6 +136,7 @@ export const MealLogScreen = (): ReactElement => {
         description: details.description,
         dateTime: entryDateTime(targetDate, details.time),
         loggedLate: details.loggedLate,
+        ...(details.photoPath ? { photoPath: details.photoPath } : {}),
       }
     : {
         description: '',

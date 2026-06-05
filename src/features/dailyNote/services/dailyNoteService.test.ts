@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { MARKDOWN_MIME_TYPE } from '../constants';
+import { MARKDOWN_MIME_TYPE, PHOTO_MIME_TYPE } from '../constants';
 import { parseMeals } from '../utils/parseMeals';
 
 import { createDailyNoteService } from './dailyNoteService';
@@ -12,7 +12,10 @@ const EXPERIMENT_URI = 'saf://exp';
 const NOTE_DATE = '2026-05-26';
 const NOTE_NAME = `${NOTE_DATE}.md`;
 const TEMP_NAME = `${NOTE_DATE}.tmp.md`;
-const MIME_EXTENSIONS: Record<string, string> = { [MARKDOWN_MIME_TYPE]: 'md' };
+const MIME_EXTENSIONS: Record<string, string> = {
+  [MARKDOWN_MIME_TYPE]: 'md',
+  [PHOTO_MIME_TYPE]: 'jpg',
+};
 
 const RICE: MealEntry = { time: '13:15', description: 'White rice, chicken, broccoli' };
 const BREAKFAST: MealEntry = { time: '08:00', description: 'Eggs and avocado' };
@@ -99,12 +102,17 @@ const createFakeBackend = (): FakeBackend => {
       // Simulate SAF: overwriting does not truncate, so a shorter payload leaves the
       // old tail bytes in place. The service must write into fresh files to be correct.
       node.contents =
-        contents.length >= previous.length
-          ? contents
-          : contents + previous.slice(contents.length);
+        contents.length >= previous.length ? contents : contents + previous.slice(contents.length);
     },
     deleteFile: async (fileUri) => {
       nodes.delete(fileUri);
+    },
+    copyLocalFile: async (parentUri, baseName, mimeType, localUri) => {
+      const extension = MIME_EXTENSIONS[mimeType];
+      const desired = extension ? `${baseName}.${extension}` : baseName;
+      const node = addNode(parentUri, uniqueName(parentUri, desired), false);
+      node.contents = `[binary:${localUri}]`;
+      return { uri: node.uri, name: node.name };
     },
   };
 
@@ -341,6 +349,21 @@ describe('createDailyNoteService', () => {
       expect(await service.readMeals(EXPERIMENT_URI, NOTE_DATE)).toEqual([
         { time: '13:15', description: RICE.description },
       ]);
+    });
+  });
+
+  describe('meal photos', () => {
+    it('copies a photo into Attachments and returns its vault-relative embed path', async () => {
+      const service = createDailyNoteService(fake.backend);
+
+      const path = await service.saveMealPhoto(
+        EXPERIMENT_URI,
+        new Date(2026, 4, 26, 13, 15),
+        'file:///cache/capture.jpg',
+      );
+
+      expect(path).toBe('Attachments/2026-05-26-1315-meal.jpg');
+      expect(fake.childNamesOf(EXPERIMENT_URI)).toContain('Attachments');
     });
   });
 

@@ -4,37 +4,48 @@ import { COLORS } from '@/theme/colors';
 import { FONT_SIZE, RADIUS, SPACING } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   content: {
     flex: 1,
     padding: SPACING.lg,
-    gap: SPACING.md,
+    gap: SPACING.xl,
   },
   title: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '700',
     color: COLORS.text,
   },
+  section: {
+    gap: SPACING.sm,
+  },
   label: {
     fontSize: FONT_SIZE.md,
+    fontWeight: '600',
     color: COLORS.text,
   },
-  input: {
-    minHeight: 96,
+  hint: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textMuted,
+  },
+  value: {
+    alignSelf: 'flex-start',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    fontSize: FONT_SIZE.md,
-    color: COLORS.text,
-    textAlignVertical: 'top',
+    backgroundColor: COLORS.surface,
   },
-  errorMessage: {
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.error,
-  },
-  photoStatus: {
-    fontSize: FONT_SIZE.md,
+  valueText: {
+    fontSize: FONT_SIZE.lg,
     color: COLORS.text,
+  },
+  folderPath: {
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textMuted,
   },
   spacer: {
     flex: 1,

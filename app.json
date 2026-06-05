@@ -33,7 +33,19 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "GlucoWatch uses the camera to attach a photo to a meal."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#208AEF"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

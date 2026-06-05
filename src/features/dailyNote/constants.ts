@@ -42,6 +42,24 @@ export const MORNING_CHILD_INDENT = '  ';
 
 export const WAIST_UNIT = 'cm';
 
+// Photo embeds use Obsidian's `![[relative/path]]` syntax (plan §3).
+export const EMBED_OPEN = '![[';
+
+export const EMBED_CLOSE = ']]';
+
+export const ATTACHMENTS_SUBFOLDER = 'Attachments';
+
+export const PHOTO_MIME_TYPE = 'image/jpeg';
+
+export const PHOTO_FILE_EXTENSION = 'jpg';
+
+// The fixed `-meal` suffix in `Attachments/YYYY-MM-DD-HHMM-meal.jpg`.
+export const PHOTO_FILE_MARKER = 'meal';
+
+// Camera capture compression — meals don't need full resolution, and smaller files
+// sync faster through Syncthing.
+export const PHOTO_QUALITY = 0.6;
+
 // Appended to a backdated entry's notes line so the analysis agent knows the
 // timestamp was reconstructed after the fact and may be approximate (plan §4).
 export const LOGGED_LATE_MARKER = '(logged late)';

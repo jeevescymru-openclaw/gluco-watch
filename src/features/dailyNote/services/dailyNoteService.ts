@@ -1,6 +1,13 @@
 import { VaultPermissionError } from '@/features/vault/services/vaultService';
 
-import { DAILY_SUBFOLDER, EXERCISE_HEADING, MARKDOWN_MIME_TYPE, MEALS_HEADING } from '../constants';
+import {
+  ATTACHMENTS_SUBFOLDER,
+  DAILY_SUBFOLDER,
+  EXERCISE_HEADING,
+  MARKDOWN_MIME_TYPE,
+  MEALS_HEADING,
+  PHOTO_MIME_TYPE,
+} from '../constants';
 import { createDailyNote } from '../utils/createDailyNote';
 import { insertExercise } from '../utils/insertExercise';
 import { insertMeal } from '../utils/insertMeal';
@@ -14,6 +21,7 @@ import { parseDailyEntries } from '../utils/parseEntries';
 import { parseExerciseDetails, parseMealDetails } from '../utils/parseEntryDetails';
 import { parseMeals } from '../utils/parseMeals';
 import { parseMorning } from '../utils/parseMorning';
+import { attachmentRelativePath, photoFileBaseName } from '../utils/photo';
 import { removeSectionEntry } from '../utils/removeEntry';
 import { setMorning } from '../utils/setMorning';
 
@@ -70,6 +78,12 @@ export interface DailyNoteService {
   ): Promise<void>;
   saveMorning(experimentFolderUri: string, noteDate: string, morning: MorningEntry): Promise<void>;
   readMorning(experimentFolderUri: string, noteDate: string): Promise<MorningEntry | null>;
+  /** Copies a captured photo into `Attachments/` and returns its vault-relative embed path. */
+  saveMealPhoto(
+    experimentFolderUri: string,
+    dateTime: Date,
+    localPhotoUri: string,
+  ): Promise<string>;
 }
 
 const SECTION_HEADINGS: Record<DailyEntryKind, string> = {
@@ -91,11 +105,14 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
     }
   };
 
-  const resolveDailyFolder = async (experimentFolderUri: string): Promise<string> => {
+  const resolveSubfolder = async (experimentFolderUri: string, name: string): Promise<string> => {
     const children = await backend.listChildren(experimentFolderUri);
-    const daily = findChild(children, DAILY_SUBFOLDER);
-    return daily ? daily.uri : backend.makeDirectory(experimentFolderUri, DAILY_SUBFOLDER);
+    const existing = findChild(children, name);
+    return existing ? existing.uri : backend.makeDirectory(experimentFolderUri, name);
   };
+
+  const resolveDailyFolder = (experimentFolderUri: string): Promise<string> =>
+    resolveSubfolder(experimentFolderUri, DAILY_SUBFOLDER);
 
   const restoreFromTemp = async (
     dailyFolderUri: string,
@@ -260,7 +277,11 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       originalContent !== null ? removeSectionEntry(originalContent, heading, index) : null;
 
     if (originalDate === newDate) {
-      await writeNoteAtomically(dailyFolderUri, newDate, insertInto(withoutEntry ?? createDailyNote(newDate)));
+      await writeNoteAtomically(
+        dailyFolderUri,
+        newDate,
+        insertInto(withoutEntry ?? createDailyNote(newDate)),
+      );
       return;
     }
 
@@ -268,7 +289,11 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       await writeNoteAtomically(dailyFolderUri, originalDate, withoutEntry);
     }
     const targetExisting = await readOrRecoverNote(dailyFolderUri, newDate);
-    await writeNoteAtomically(dailyFolderUri, newDate, insertInto(targetExisting ?? createDailyNote(newDate)));
+    await writeNoteAtomically(
+      dailyFolderUri,
+      newDate,
+      insertInto(targetExisting ?? createDailyNote(newDate)),
+    );
   };
 
   const updateMeal = (
@@ -340,6 +365,22 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
       return content ? parseMorning(content) : null;
     });
 
+  const saveMealPhoto = (
+    experimentFolderUri: string,
+    dateTime: Date,
+    localPhotoUri: string,
+  ): Promise<string> =>
+    guard(async () => {
+      const attachmentsUri = await resolveSubfolder(experimentFolderUri, ATTACHMENTS_SUBFOLDER);
+      const child = await backend.copyLocalFile(
+        attachmentsUri,
+        photoFileBaseName(dateTime),
+        PHOTO_MIME_TYPE,
+        localPhotoUri,
+      );
+      return attachmentRelativePath(child.name);
+    });
+
   return {
     logMeal,
     logExercise,
@@ -352,5 +393,6 @@ export const createDailyNoteService = (backend: SafBackend): DailyNoteService =>
     deleteEntry,
     saveMorning,
     readMorning,
+    saveMealPhoto,
   };
 };

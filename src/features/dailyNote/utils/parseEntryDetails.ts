@@ -7,7 +7,7 @@ import {
   MEALS_HEADING,
   NOTES_PREFIX,
 } from '../constants';
-import { ENTRY_HEADING_PATTERN } from './patterns';
+import { EMBED_PATTERN, ENTRY_HEADING_PATTERN } from './patterns';
 import { sectionBlockTexts } from './sections';
 
 import type { ExerciseDetails, ExerciseType, MealDetails } from '../dailyNote.types';
@@ -35,11 +35,13 @@ const parseBlock = (blockText: string): MealDetails | null => {
   const notesLine = lines.find((line) => line.startsWith(NOTES_PREFIX));
   const rawNotes = notesLine ? notesLine.slice(NOTES_PREFIX.length).trim() : '';
   const notes = stripMarker(rawNotes);
+  const embed = lines.map((line) => EMBED_PATTERN.exec(line)).find(Boolean);
   return {
     time: heading[1],
     description: heading[2].trim(),
     loggedLate: rawNotes.endsWith(LOGGED_LATE_MARKER),
     ...(notes ? { notes } : {}),
+    ...(embed ? { photoPath: embed[1] } : {}),
   };
 };
 
