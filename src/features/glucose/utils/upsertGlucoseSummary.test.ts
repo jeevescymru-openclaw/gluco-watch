@@ -68,6 +68,6 @@ describe('parseSummarySource', () => {
   it('treats a summary without a Source line as the lowest precedence', () => {
     const legacy =
       '### 13:15 — Rice\n\n#### Glucose summary\n- Baseline: 5.1 mmol/L\n- Quality: clean';
-    expect(parseSummarySource(legacy)).toBe('health-connect');
+    expect(parseSummarySource(legacy)).toBe('lingo-csv');
   });
 });

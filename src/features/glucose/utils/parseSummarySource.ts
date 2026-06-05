@@ -12,7 +12,8 @@ const isKnownSource = (value: string): value is GlucoseSourceId =>
 /**
  * Reads the `Source:` of an existing glucose summary inside a meal block, used to decide
  * import precedence. Returns null when the meal has no summary yet. A summary that predates
- * source stamping (no `Source:` line) is treated as the lowest precedence: `health-connect`.
+ * source stamping (no `Source:` line) is treated as the lowest precedence (`lingo-csv` under
+ * amendment v2), so any fresh import may replace it.
  */
 export const parseSummarySource = (mealBlockText: string): GlucoseSourceId | null => {
   const lines = mealBlockText.split('\n');
@@ -23,8 +24,8 @@ export const parseSummarySource = (mealBlockText: string): GlucoseSourceId | nul
   for (let index = headingIndex + 1; index < lines.length; index += 1) {
     const match = SOURCE_LINE_PATTERN.exec(lines[index].trim());
     if (match) {
-      return isKnownSource(match[1]) ? match[1] : SOURCE_IDS.healthConnect;
+      return isKnownSource(match[1]) ? match[1] : SOURCE_IDS.lingoCsv;
     }
   }
-  return SOURCE_IDS.healthConnect;
+  return SOURCE_IDS.lingoCsv;
 };

@@ -11,8 +11,9 @@ export const GLUCOSE_IMPORT_LABELS = {
   genericError: 'Something went wrong reading the glucose data.',
   cancel: 'Cancel',
   close: 'Close',
-  protectedHint: 'Higher-quality CSV summary already here — keep it, or re-summarise.',
-  resummarise: 'Re-summarise',
+  protectedHint:
+    'A fresher Health Connect summary is already here — keep it, or import this one anyway.',
+  resummarise: 'Import anyway',
 } as const;
 
 export const CLASSIFICATION_LABELS: Record<MealClassification, string> = {

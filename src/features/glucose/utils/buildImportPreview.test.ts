@@ -59,24 +59,24 @@ describe('buildImportPreview', () => {
     expect(meals[0].summary.peakMmol).toBeCloseTo(7.0, 1);
   });
 
-  it('replaces a Health Connect summary on a CSV import', () => {
+  it('protects a Health Connect summary from a CSV backfill', () => {
     const meals = buildImportPreview({
       notes: [{ noteDate: NOTE_DATE, content: noteWithMeal('health-connect') }],
       samples,
       sourceId: 'lingo-csv',
     });
 
-    expect(meals[0].classification).toBe('replace');
+    expect(meals[0].classification).toBe('protected');
   });
 
-  it('protects a CSV summary from a Health Connect import', () => {
+  it('replaces a CSV summary on a Health Connect import', () => {
     const meals = buildImportPreview({
       notes: [{ noteDate: NOTE_DATE, content: noteWithMeal('lingo-csv') }],
       samples,
       sourceId: 'health-connect',
     });
 
-    expect(meals[0].classification).toBe('protected');
+    expect(meals[0].classification).toBe('replace');
   });
 
   it('drops a meal that has no readings in its post-meal window', () => {

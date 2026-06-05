@@ -32,10 +32,12 @@ export const SOURCE_IDS = {
   healthConnect: 'health-connect',
 } as const;
 
-// Import precedence: CSV (unclamped truth) outranks Health Connect (clamped convenience).
+// Import precedence (amendment v2): Health Connect is primary — fresher and finer-grained
+// — so a stale CSV backfill must not clobber a good HC summary by default. The CSV's one
+// edge is clamped HC curves, handled separately as the clamp exception (§6c).
 export const SOURCE_PRECEDENCE: Record<GlucoseSourceId, number> = {
-  'lingo-csv': 2,
-  'health-connect': 1,
+  'health-connect': 2,
+  'lingo-csv': 1,
 };
 
 export const GLUCOSE_SUMMARY_HEADING = '#### Glucose summary';

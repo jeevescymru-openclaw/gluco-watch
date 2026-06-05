@@ -10,27 +10,31 @@ describe('classifyMeal', () => {
   });
 
   it('replaces an equal- or lower-precedence existing summary', () => {
-    expect(
-      classifyMeal({
-        existingSource: 'health-connect',
-        incomingSource: 'lingo-csv',
-        isPending: false,
-      }),
-    ).toBe('replace');
-    expect(
-      classifyMeal({
-        existingSource: 'health-connect',
-        incomingSource: 'health-connect',
-        isPending: false,
-      }),
-    ).toBe('replace');
-  });
-
-  it('protects a higher-precedence CSV summary from a Health Connect run', () => {
+    // Health Connect is primary (v2): it replaces a CSV summary and another HC summary.
     expect(
       classifyMeal({
         existingSource: 'lingo-csv',
         incomingSource: 'health-connect',
+        isPending: false,
+      }),
+    ).toBe('replace');
+    expect(
+      classifyMeal({
+        existingSource: 'health-connect',
+        incomingSource: 'health-connect',
+        isPending: false,
+      }),
+    ).toBe('replace');
+    expect(
+      classifyMeal({ existingSource: 'lingo-csv', incomingSource: 'lingo-csv', isPending: false }),
+    ).toBe('replace');
+  });
+
+  it('protects a higher-precedence Health Connect summary from a CSV backfill', () => {
+    expect(
+      classifyMeal({
+        existingSource: 'health-connect',
+        incomingSource: 'lingo-csv',
         isPending: false,
       }),
     ).toBe('protected');
