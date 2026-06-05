@@ -15,6 +15,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": ["android.permission.health.READ_BLOOD_GLUCOSE"],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -45,7 +46,9 @@
         {
           "color": "#208AEF"
         }
-      ]
+      ],
+      "react-native-health-connect",
+      "./plugins/withHealthConnectDelegate"
     ],
     "experiments": {
       "typedRoutes": true,

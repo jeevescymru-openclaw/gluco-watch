@@ -52,3 +52,14 @@ export interface GlucoseImportPlan {
   readonly rangeTo: string;
   readonly meals: readonly GlucosePreviewMeal[];
 }
+
+/**
+ * The outcome of starting an import: a plan to preview, a user cancel, or a Health Connect
+ * blocker the UI must surface (not installed, provider out of date, or read access refused).
+ */
+export type GlucoseImportOutcome =
+  | { readonly kind: 'plan'; readonly plan: GlucoseImportPlan }
+  | { readonly kind: 'cancelled' }
+  | { readonly kind: 'unavailable' }
+  | { readonly kind: 'update-required' }
+  | { readonly kind: 'permission-denied' };

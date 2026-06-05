@@ -6,7 +6,7 @@ import { GLUCOSE_IMPORT_LABELS } from '../components/GlucoseImportScreen/constan
 import { glucoseImportService } from '../services/glucoseImportServiceInstance';
 import { includedMeals, mealKey } from '../utils/previewSelection';
 
-import type { GlucoseImportPlan } from '../glucose.types';
+import type { GlucoseImportPlan, GlucoseSourceId } from '../glucose.types';
 
 export type ImportPhase =
   | 'loading'
@@ -15,7 +15,10 @@ export type ImportPhase =
   | 'applying'
   | 'cancelled'
   | 'done'
-  | 'error';
+  | 'error'
+  | 'unavailable'
+  | 'update-required'
+  | 'permission-denied';
 
 export interface UseGlucoseImport {
   readonly phase: ImportPhase;
@@ -32,7 +35,10 @@ const messageFor = (error: unknown): string =>
     ? GLUCOSE_IMPORT_LABELS.permissionError
     : GLUCOSE_IMPORT_LABELS.genericError;
 
-export const useGlucoseImport = (experimentFolderUri: string): UseGlucoseImport => {
+export const useGlucoseImport = (
+  experimentFolderUri: string,
+  source: GlucoseSourceId,
+): UseGlucoseImport => {
   const [phase, setPhase] = useState<ImportPhase>('loading');
   const [plan, setPlan] = useState<GlucoseImportPlan | null>(null);
   const [overrides, setOverrides] = useState<ReadonlySet<string>>(() => new Set());
@@ -41,17 +47,17 @@ export const useGlucoseImport = (experimentFolderUri: string): UseGlucoseImport 
   useEffect(() => {
     let active = true;
     glucoseImportService
-      .previewCsvImport(experimentFolderUri)
-      .then((result) => {
+      .previewImport(experimentFolderUri, source)
+      .then((outcome) => {
         if (!active) {
           return;
         }
-        if (!result) {
-          setPhase('cancelled');
+        if (outcome.kind === 'plan') {
+          setPlan(outcome.plan);
+          setPhase(outcome.plan.meals.length === 0 ? 'empty' : 'preview');
           return;
         }
-        setPlan(result);
-        setPhase(result.meals.length === 0 ? 'empty' : 'preview');
+        setPhase(outcome.kind);
       })
       .catch((error: unknown) => {
         if (active) {
@@ -62,7 +68,7 @@ export const useGlucoseImport = (experimentFolderUri: string): UseGlucoseImport 
     return () => {
       active = false;
     };
-  }, [experimentFolderUri]);
+  }, [experimentFolderUri, source]);
 
   const toggleOverride = useCallback((key: string): void => {
     setOverrides((previous) => {

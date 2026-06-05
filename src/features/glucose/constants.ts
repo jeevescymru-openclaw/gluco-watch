@@ -6,6 +6,24 @@ export const CSV_MIME_TYPE = 'text/csv';
 
 export const CSV_FILE_EXTENSION = 'csv';
 
+// The header line of a real Lingo export, reused when serialising the Health Connect
+// derived export so the vault file is indistinguishable in format (6d).
+export const LINGO_CSV_HEADER =
+  'Time of Glucose Reading [T=(local time) +/- (time zone offset)], Measurement(mmol/L)';
+
+export const HEALTH_CONNECT_PROVIDER_PACKAGE = 'com.google.android.apps.healthdata';
+
+export const HEALTH_CONNECT_PLAY_STORE_URL =
+  'market://details?id=com.google.android.apps.healthdata';
+
+export const BLOOD_GLUCOSE_RECORD_TYPE = 'BloodGlucose';
+
+// Health Connect read pagination — one page comfortably covers a multi-week 5-min series.
+export const HEALTH_CONNECT_PAGE_SIZE = 5000;
+
+// Distinguishes the derived export from a same-day real Lingo CSV (amendment §6d).
+export const HEALTH_CONNECT_EXPORT_SUFFIX = '-healthconnect';
+
 export const GLUCOSE_UNIT = 'mmol/L';
 
 export const AUC_UNIT = 'mmol/L·min';

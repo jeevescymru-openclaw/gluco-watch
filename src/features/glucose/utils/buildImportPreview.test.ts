@@ -79,6 +79,18 @@ describe('buildImportPreview', () => {
     expect(meals[0].classification).toBe('replace');
   });
 
+  it('marks a meal pending when its window extends past the available data', () => {
+    const mealAt = entryDateTime(NOTE_DATE, '13:15');
+    const meals = buildImportPreview({
+      notes: [{ noteDate: NOTE_DATE, content: noteWithMeal() }],
+      samples,
+      sourceId: 'health-connect',
+      pendingAfter: new Date(mealAt.getTime() + 60 * 60_000),
+    });
+
+    expect(meals[0].classification).toBe('pending');
+  });
+
   it('drops a meal that has no readings in its post-meal window', () => {
     const note = insertMeal(createDailyNote(NOTE_DATE), {
       time: '08:00',

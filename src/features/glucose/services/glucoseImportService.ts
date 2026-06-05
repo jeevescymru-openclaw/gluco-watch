@@ -1,31 +1,48 @@
+import { formatNoteDate, parseNoteDate } from '@/features/dailyNote/utils/dateFormat';
 import { VaultPermissionError } from '@/features/vault/services/vaultService';
-import { formatNoteDate } from '@/features/dailyNote/utils/dateFormat';
 
 import {
   CSV_FILE_EXTENSION,
   CSV_MIME_TYPE,
+  HEALTH_CONNECT_EXPORT_SUFFIX,
   LINGO_EXPORTS_SUBFOLDER,
   SOURCE_IDS,
 } from '../constants';
+import {
+  getHealthConnectStatus,
+  readGlucoseSamples,
+  requestGlucoseReadPermission,
+} from './healthConnectClient';
 import { buildImportPreview } from '../utils/buildImportPreview';
+import { hcSamplesToCsv } from '../utils/hcSamplesToCsv';
 import { parseLingoCsv } from '../utils/parseLingoCsv';
 import { pickCsvFile } from '../utils/pickCsvFile';
 import { renderGlucoseSummary } from '../utils/renderGlucoseSummary';
 import { upsertGlucoseSummary } from '../utils/upsertGlucoseSummary';
 
 import type { NoteContent } from '../utils/buildImportPreview';
-import type { GlucoseImportPlan, GlucosePreviewMeal } from '../glucose.types';
+import type {
+  GlucoseImportOutcome,
+  GlucoseImportPlan,
+  GlucosePreviewMeal,
+  GlucoseSourceId,
+} from '../glucose.types';
 import type { DailyNoteService } from '@/features/dailyNote/services/dailyNoteService';
 import type { SafBackend } from '@/features/vault/services/safBackend.types';
 
 export interface GlucoseImportService {
-  /** Picks a Lingo CSV, copies it into the vault, and previews the per-meal summaries. */
-  previewCsvImport(experimentFolderUri: string): Promise<GlucoseImportPlan | null>;
+  /** Starts an import from the given source: previews the per-meal summaries or reports a blocker. */
+  previewImport(
+    experimentFolderUri: string,
+    source: GlucoseSourceId,
+  ): Promise<GlucoseImportOutcome>;
   /** Writes the chosen summaries into their daily notes. */
   applyImport(experimentFolderUri: string, meals: readonly GlucosePreviewMeal[]): Promise<void>;
 }
 
-const exportFileName = (importDate: string): string => `${importDate}.${CSV_FILE_EXTENSION}`;
+const csvExportName = (importDate: string): string => `${importDate}.${CSV_FILE_EXTENSION}`;
+
+const hcExportBase = (importDate: string): string => `${importDate}${HEALTH_CONNECT_EXPORT_SUFFIX}`;
 
 export const createGlucoseImportService = (
   backend: SafBackend,
@@ -47,23 +64,23 @@ export const createGlucoseImportService = (
     return existing ? existing.uri : backend.makeDirectory(experimentFolderUri, name);
   };
 
-  // Copies the raw CSV into `Lingo Exports/` so the vault stays self-contained. A fresh
-  // file is created each time because SAF overwrites do not truncate.
+  // Writes a CSV into `Lingo Exports/` so the vault stays self-contained. A fresh file is
+  // created each time because SAF overwrites do not truncate.
   const saveExport = async (
     experimentFolderUri: string,
-    importDate: string,
-    csvText: string,
+    baseName: string,
+    content: string,
   ): Promise<void> => {
     const exportsUri = await resolveSubfolder(experimentFolderUri, LINGO_EXPORTS_SUBFOLDER);
-    const fileName = exportFileName(importDate);
+    const fileName = `${baseName}.${CSV_FILE_EXTENSION}`;
     const existing = (await backend.listChildren(exportsUri)).find(
       (child) => child.name === fileName,
     );
     if (existing) {
       await backend.deleteFile(existing.uri);
     }
-    const uri = await backend.createFile(exportsUri, importDate, CSV_MIME_TYPE);
-    await backend.writeText(uri, csvText);
+    const uri = await backend.createFile(exportsUri, baseName, CSV_MIME_TYPE);
+    await backend.writeText(uri, content);
   };
 
   const readNotesInRange = async (
@@ -83,28 +100,27 @@ export const createGlucoseImportService = (
     return loaded.filter((note): note is NoteContent => note.content !== null);
   };
 
-  const previewCsvImport = async (
-    experimentFolderUri: string,
-  ): Promise<GlucoseImportPlan | null> => {
+  const emptyPlan = (sourceId: GlucoseSourceId, exportFileName: string): GlucoseImportPlan => ({
+    sourceId,
+    exportFileName,
+    rangeFrom: '',
+    rangeTo: '',
+    meals: [],
+  });
+
+  const previewCsv = async (experimentFolderUri: string): Promise<GlucoseImportOutcome> => {
     const picked = await pickCsvFile();
     if (!picked) {
-      return null;
+      return { kind: 'cancelled' };
     }
-
-    return guard(async () => {
+    return guard<GlucoseImportOutcome>(async () => {
       const csvText = await backend.readText(picked.uri);
       const samples = parseLingoCsv(csvText);
       const importDate = formatNoteDate(new Date());
       await saveExport(experimentFolderUri, importDate, csvText);
 
       if (samples.length === 0) {
-        return {
-          sourceId: SOURCE_IDS.lingoCsv,
-          exportFileName: exportFileName(importDate),
-          rangeFrom: '',
-          rangeTo: '',
-          meals: [],
-        };
+        return { kind: 'plan', plan: emptyPlan(SOURCE_IDS.lingoCsv, csvExportName(importDate)) };
       }
 
       const rangeFrom = formatNoteDate(samples[0].time);
@@ -112,14 +128,78 @@ export const createGlucoseImportService = (
       const notesInRange = await readNotesInRange(experimentFolderUri, rangeFrom, rangeTo);
 
       return {
-        sourceId: SOURCE_IDS.lingoCsv,
-        exportFileName: exportFileName(importDate),
-        rangeFrom,
-        rangeTo,
-        meals: buildImportPreview({ notes: notesInRange, samples, sourceId: SOURCE_IDS.lingoCsv }),
+        kind: 'plan',
+        plan: {
+          sourceId: SOURCE_IDS.lingoCsv,
+          exportFileName: csvExportName(importDate),
+          rangeFrom,
+          rangeTo,
+          // The settled CSV never marks meals pending; a short window is missing_data.
+          meals: buildImportPreview({
+            notes: notesInRange,
+            samples,
+            sourceId: SOURCE_IDS.lingoCsv,
+          }),
+        },
       };
     });
   };
+
+  const previewHealthConnect = async (
+    experimentFolderUri: string,
+  ): Promise<GlucoseImportOutcome> => {
+    const status = await getHealthConnectStatus();
+    if (status !== 'ready') {
+      return { kind: status === 'update-required' ? 'update-required' : 'unavailable' };
+    }
+    if (!(await requestGlucoseReadPermission())) {
+      return { kind: 'permission-denied' };
+    }
+
+    return guard<GlucoseImportOutcome>(async () => {
+      const importDate = formatNoteDate(new Date());
+      const exportName = `${hcExportBase(importDate)}.${CSV_FILE_EXTENSION}`;
+      const noteDates = await notes.listNoteDates(experimentFolderUri);
+      if (noteDates.length === 0) {
+        return { kind: 'plan', plan: emptyPlan(SOURCE_IDS.healthConnect, exportName) };
+      }
+
+      const rangeFrom = noteDates[0];
+      const rangeTo = importDate;
+      const samples = await readGlucoseSamples(parseNoteDate(rangeFrom), new Date());
+      if (samples.length === 0) {
+        return { kind: 'plan', plan: emptyPlan(SOURCE_IDS.healthConnect, exportName) };
+      }
+
+      await saveExport(experimentFolderUri, hcExportBase(importDate), hcSamplesToCsv(samples));
+      const notesInRange = await readNotesInRange(experimentFolderUri, rangeFrom, rangeTo);
+      const pendingAfter = samples[samples.length - 1].time;
+
+      return {
+        kind: 'plan',
+        plan: {
+          sourceId: SOURCE_IDS.healthConnect,
+          exportFileName: exportName,
+          rangeFrom,
+          rangeTo,
+          meals: buildImportPreview({
+            notes: notesInRange,
+            samples,
+            sourceId: SOURCE_IDS.healthConnect,
+            pendingAfter,
+          }),
+        },
+      };
+    });
+  };
+
+  const previewImport = (
+    experimentFolderUri: string,
+    source: GlucoseSourceId,
+  ): Promise<GlucoseImportOutcome> =>
+    source === SOURCE_IDS.healthConnect
+      ? previewHealthConnect(experimentFolderUri)
+      : previewCsv(experimentFolderUri);
 
   const applyImport = (
     experimentFolderUri: string,
@@ -139,7 +219,7 @@ export const createGlucoseImportService = (
           continue;
         }
         const updated = group.reduce(
-          (note, meal) =>
+          (note: string, meal) =>
             upsertGlucoseSummary(note, meal.mealIndex, renderGlucoseSummary(meal.summary)),
           content,
         );
@@ -147,5 +227,5 @@ export const createGlucoseImportService = (
       }
     });
 
-  return { previewCsvImport, applyImport };
+  return { previewImport, applyImport };
 };

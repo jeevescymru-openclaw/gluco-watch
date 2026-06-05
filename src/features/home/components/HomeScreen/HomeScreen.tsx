@@ -9,6 +9,7 @@ import { DailyEntryList } from '@/features/dailyNote/components/DailyEntryList/D
 import { useDailyEntries } from '@/features/dailyNote/hooks/useDailyEntries';
 import { useMorningEntries } from '@/features/dailyNote/hooks/useMorningEntries';
 import { formatRelativeDay } from '@/features/dailyNote/utils/dateFormat';
+import { SOURCE_IDS } from '@/features/glucose/constants';
 import { useMorningReminder } from '@/features/notifications/hooks/useMorningReminder';
 import { COLORS } from '@/theme/colors';
 
@@ -70,7 +71,7 @@ export const HomeScreen = ({ config }: HomeScreenProps): ReactElement => {
   };
 
   const handleImportGlucose = (): void => {
-    router.push(GLUCOSE_IMPORT_ROUTE);
+    router.push({ pathname: GLUCOSE_IMPORT_ROUTE, params: { source: SOURCE_IDS.healthConnect } });
   };
 
   return (

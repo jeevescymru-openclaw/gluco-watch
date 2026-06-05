@@ -16,6 +16,7 @@ export const MealPreviewRow = ({
 }: MealPreviewRowProps): ReactElement => {
   const styles = useStyles({ classification: meal.classification });
   const isProtected = meal.classification === 'protected';
+  const isPending = meal.classification === 'pending';
 
   return (
     <View style={styles.container}>
@@ -26,7 +27,9 @@ export const MealPreviewRow = ({
         </View>
       </View>
       <Text style={styles.description}>{meal.description}</Text>
-      <Text style={styles.summary}>{summaryLine(meal.summary)}</Text>
+      <Text style={styles.summary}>
+        {isPending ? GLUCOSE_IMPORT_LABELS.pending : summaryLine(meal.summary)}
+      </Text>
 
       {isProtected ? (
         <>

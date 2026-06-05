@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton/AppButton';
+import { SOURCE_IDS } from '@/features/glucose/constants';
 import { useReminderTime } from '@/features/settings/hooks/useReminderTime';
 import {
   ensureNotificationPermission,
@@ -12,7 +13,7 @@ import {
 } from '@/features/notifications/services/notificationService';
 import { useVaultConfig } from '@/features/vault/hooks/useVaultConfig';
 
-import { SETTINGS_LABELS } from './constants';
+import { GLUCOSE_IMPORT_ROUTE, SETTINGS_LABELS } from './constants';
 import { styles } from './styles';
 
 import type { ReminderTime } from '@/features/notifications/notification.types';
@@ -55,6 +56,10 @@ export const SettingsScreen = (): ReactElement => {
     router.back();
   };
 
+  const handleImportCsv = (): void => {
+    router.push({ pathname: GLUCOSE_IMPORT_ROUTE, params: { source: SOURCE_IDS.lingoCsv } });
+  };
+
   const handleDone = (): void => {
     router.back();
   };
@@ -93,6 +98,12 @@ export const SettingsScreen = (): ReactElement => {
             onPress={() => void handleChangeFolder()}
             tone="secondary"
           />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>{SETTINGS_LABELS.glucoseLabel}</Text>
+          <Text style={styles.hint}>{SETTINGS_LABELS.glucoseHint}</Text>
+          <AppButton label={SETTINGS_LABELS.importCsv} onPress={handleImportCsv} tone="secondary" />
         </View>
 
         <View style={styles.spacer} />

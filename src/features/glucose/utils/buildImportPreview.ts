@@ -3,11 +3,14 @@ import { entryDateTime } from '@/features/dailyNote/utils/dateFormat';
 import { parseDailyEntries } from '@/features/dailyNote/utils/parseEntries';
 import { sectionBlockTexts } from '@/features/dailyNote/utils/sections';
 
+import { POST_MEAL_WINDOW_MIN } from '../constants';
 import { classifyMeal } from './classifyMeal';
 import { computeSummary } from './computeSummary';
 import { parseSummarySource } from './parseSummarySource';
 
 import type { GlucosePreviewMeal, GlucoseSample, GlucoseSourceId } from '../glucose.types';
+
+const MS_PER_MINUTE = 60_000;
 
 export interface NoteContent {
   readonly noteDate: string;
@@ -18,6 +21,12 @@ export interface BuildPreviewInput {
   readonly notes: readonly NoteContent[];
   readonly samples: readonly GlucoseSample[];
   readonly sourceId: GlucoseSourceId;
+  /**
+   * The latest instant glucose data is known to cover. A meal whose 2h window extends past
+   * it is **pending** — too recent to summarise (Health Connect's ~3h delay). Null disables
+   * pending (the CSV is a settled historical dump, so a short window is missing_data instead).
+   */
+  readonly pendingAfter?: Date | null;
 }
 
 /**
@@ -29,8 +38,13 @@ export const buildImportPreview = ({
   notes,
   samples,
   sourceId,
+  pendingAfter = null,
 }: BuildPreviewInput): readonly GlucosePreviewMeal[] => {
   const meals: GlucosePreviewMeal[] = [];
+
+  const isPendingAt = (mealAt: Date): boolean =>
+    pendingAfter !== null &&
+    mealAt.getTime() + POST_MEAL_WINDOW_MIN * MS_PER_MINUTE > pendingAfter.getTime();
 
   for (const note of notes) {
     const mealEntries = parseDailyEntries(note.content).filter((entry) => entry.kind === 'meal');
@@ -53,7 +67,7 @@ export const buildImportPreview = ({
         classification: classifyMeal({
           existingSource: parseSummarySource(blocks[entry.index] ?? ''),
           incomingSource: sourceId,
-          isPending: false,
+          isPending: isPendingAt(mealAt),
         }),
         summary,
       });
