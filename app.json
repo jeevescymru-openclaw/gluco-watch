@@ -15,7 +15,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["android.permission.health.READ_BLOOD_GLUCOSE"],
+      "permissions": [
+        "android.permission.health.READ_BLOOD_GLUCOSE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -48,7 +50,15 @@
         }
       ],
       "react-native-health-connect",
-      "./plugins/withHealthConnectDelegate"
+      "./plugins/withHealthConnectDelegate",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
